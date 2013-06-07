@@ -318,7 +318,7 @@ function VisCtrl($scope, $window, $timeout, $filter, logFactory, modelSrvc, apiS
 
   function hoverContentForPeer(peer) {
     var ctx = {
-      picture: 'img/default-avatar.png',
+      picture: 'img/default-avatar.png', // XXX don't hard-code
       name: '',
       email: '',
       peerid: peer.peerid,

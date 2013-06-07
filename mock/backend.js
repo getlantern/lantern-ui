@@ -388,32 +388,15 @@ MockBackend._handlerForModal[MODAL.systemProxy] = function(interaction, res, dat
 };
 
 MockBackend._handlerForModal[MODAL.lanternFriends] = function(interaction, res, data) {
-  if (interaction === INTERACTION.invite) {
-    if (data) {
-      if (data.length > this.model.ninvites) {
-        log('more invitees than invites', data);
+  if (interaction === INTERACTION.friendsChanged && _.isArray(data)) {
+    for (var i=0, ii=data[i]; ii; ii=data[++i]) {
+      if (!EMAIL.test(ii.id)) {
+        log('not a valid email:', ii.id);
         return res.writeHead(400);
       }
-      for (var i=0, ii=data[i]; ii; ii=data[++i]) {
-        if (!EMAIL.test(ii)) {
-          log('not a valid email:', ii);
-          return res.writeHead(400);
-        }
-      }
-      var n = data.length, msg = n > 1 ? 'Friend requests' : 'Friend request';
-      msg += ' queued for <span class="titled" title="name here if available">'+data[0]+'</span>';
-      if (n > 2) {
-        data.splice(0, 1);
-        msg += ' and <span class="titled" title="'+data.join(', ')+'">'+(n-1)+' others</span>.'
-      } else if (n === 2) {
-        msg += ' and <span class="titled" title="name here if available">'+data[1]+'</span>.'
-      } else {
-        msg += '.';
-      }
-      var update = {'/ninvites': this.model.ninvites - data.length};
-      update['/notifications/'+nextid()] = {type: 'info', message: msg, autoClose: 30};
-      this.sync(update);
     }
+    log('changing friends to:', data);
+    this.sync({'/friends/added': data});
   } else if (interaction === INTERACTION.continue) {
     this._internalState.modalsCompleted[MODAL.lanternFriends] = true;
     this._advanceModal();

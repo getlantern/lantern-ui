@@ -228,6 +228,21 @@ exports.SCENARIOS = {
       desc: 'friends1',
       func: function() {
               var friends = {
+                added: [{
+                           email: 'lantern_friend1@example.com',
+                           picture: 'img/default-avatar.png',
+                           name: 'Snyder Pearson'
+                          },
+                          {
+                           email: 'lantern_friend2@example.com',
+                           picture: 'img/default-avatar.png',
+                           name: 'Leah X Schmidt'
+                          },
+                          {
+                           email: 'lantern_power_user@example.com',
+                           picture: 'img/default-avatar.png',
+                           name: 'Myles Horton'
+                          }],
                 current: [{
                            email: 'lantern_friend1@example.com',
                            picture: 'img/default-avatar.png',

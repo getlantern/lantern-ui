@@ -32,7 +32,7 @@
   "roster":[],
   "nproxiedSitesMax":1000,
   "profile":"",
-  "friends":[],
+  "friends":{},
   "settings":{
     "mode":"",
     "lang":"",

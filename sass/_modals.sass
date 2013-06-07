@@ -32,6 +32,7 @@
     +small
 
 #langchooser
+  +opaqueOnMouseover
   //+position(5px, 15px)
   +position(false, false, 20px, 80px)
   font-size: $baseFontSize * .8
@@ -148,12 +149,17 @@
   h4
     font-size: $baseFontSize * 1.1
     margin-bottom: 15px
+  .select2-search-choice, .select2-search-field
+    line-height: inherit
+    display: block
+    float: none
+    width: 493px
+//.select2-search-field
+    width: 100%
+    border-bottom: 1px solid #aaa
 
 #lanternFriendsIntro
   margin-bottom: 20px
-
-#currentFriends
-  display: none // XXX pending https://github.com/getlantern/lantern/issues/539
 
 .contactList-horizontal
   +neverHideScrollbars
@@ -186,19 +192,18 @@
     +smaller
 
 .invitee
-  height: 53px
-  .fn, .email
+  height: 20px
+  .fn, .email, .with-ellipsis
     +ellipsisPast(450px)
   img.photo
-    width: 50px
-    height: 50px
+    width: 16px
+    height: 16px
     margin: 2px 6px 5px 0
     float: left
     &[src=""]
       display: none
 
 .inviteForm
-  +centered
   label
     +small
   &.invalid .select2-choices

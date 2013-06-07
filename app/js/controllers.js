@@ -355,43 +355,41 @@ function ProxiedSitesCtrl($scope, $timeout, $filter, logFactory, MODAL, SETTING,
   };
 }
 
-function LanternFriendsCtrl($scope, modelSrvc, logFactory, MODE, MODAL, $filter, INPUT_PAT, INTERACTION) {
+function LanternFriendsCtrl($timeout, $scope, modelSrvc, logFactory, MODE, MODAL, $filter, INPUT_PAT, INTERACTION) {
   var log = logFactory('LanternFriendsCtrl'),
       model = modelSrvc.model,
       prettyUser = $filter('prettyUser'),
-      EMAIL = INPUT_PAT.EMAIL;
+      EMAIL = INPUT_PAT.EMAIL,
+      addedEmailsModel = [];
 
-  $scope.invitees = [];
-
-  var sortedFriendEmails = [];
-  $scope.$watch('model.friends', function(friends) {
-    if (!friends) return;
-    friends = _.flatten([friends.current, friends.pending], true);
-    sortedFriendEmails = [];
-    for (var i=0, ii=friends[i]; ii; ii=friends[++i]) {
-      ii.email && sortedFriendEmails.push(ii.email);
+  $scope.$watch('added', function(added) {
+    var addedEmailsScope = _.pluck(added, 'email');
+    if (!_.isEqual(addedEmailsModel, addedEmailsScope)) {
+      $scope.interaction(INTERACTION.friendsChanged, added);
     }
-    sortedFriendEmails.sort();
+  }, true);
+
+  $scope.$watch('model.friends.added', function(added) {
+    if (!added) return;
+    $scope.added = _.map(added, function(i) {
+      return _.merge({id: i.email, text: prettyUser(i)}, i);
+    });
+    addedEmailsModel = _.pluck(added, 'email');
     updateCompletions();
   }, true);
 
   function updateCompletions() {
-    var roster = model.roster;
-    if (!roster) return;
-    var notAlreadyFriends;
-    if (_.isEmpty(sortedFriendEmails)) {
-      notAlreadyFriends = roster;
-    } else {
-      notAlreadyFriends = [];
-      for (var i=0, ii=roster[i]; ii; ii=roster[++i]) {
-        if (_.indexOf(sortedFriendEmails, ii.email, true) == -1)
-          notAlreadyFriends.push(ii);
-      }
-    }
-    $scope.notAlreadyFriends = notAlreadyFriends;
-    angular.copy(_.map(notAlreadyFriends, function(i) {
-      return _.merge({id: i.email, text: prettyUser(i)}, i);
-    }), $scope.selectInvitees.tags);
+    if (!model.roster) return;
+    var completions =
+      _(model.roster)
+      .filter(function(i) {
+        return !_.contains(addedEmailsModel, i.email);
+      })
+      .map(function(i) {
+        return _.merge({id: i.email, text: prettyUser(i)}, i);
+      })
+      .value();
+    angular.copy(completions, $scope.select2Options.tags);
   }
 
   $scope.$watch('model.roster', function(roster) {
@@ -402,52 +400,43 @@ function LanternFriendsCtrl($scope, modelSrvc, logFactory, MODE, MODAL, $filter,
   var resultTmpl = _.template(
     '<div class="invitee vcard">'+
       '<img class="photo" src="${picture}">'+
-      '<div class="fn">${name}</div>'+
-      '<div class="email">${email}</div>'+
+      '<div class="with-ellipsis">${text}</div>'+
     '</div>'
   );
+  function formatResult(result) {
+    if (!result.picture) result.picture = 'img/default-avatar.png'; // XXX don't hard-code
+    return resultTmpl(result);
+  }
 
-  $scope.selectInvitees = {
+  $scope.select2Options = {
     tags: [],
     tokenSeparators: [','],
     multiple: true,
   //selectOnBlur: true, // requires select2 3.3
-    formatSelection: function(item) {
-      return item.id;
-    },
     formatSearching: function() {
       return $filter('i18n')('SEARCHING_ELLIPSIS');
     },
     formatNoMatches: function() {
       return $filter('i18n')('ENTER_VALID_EMAIL');
     },
-    formatResult: function(result) {
-      return resultTmpl(result);
-    },
+    formatSelection: formatResult,
+    formatResult: formatResult,
+    closeOnSelect: false,
     createSearchChoice: function(input) {
-      return EMAIL.test(input) ? {id: input, text: input, email: input, name: '', picture: ''} : undefined;
+      return EMAIL.test(input) ? {id: input, text: input} : undefined;
     }
   };
-
-  function resetForm() {
-    $scope.invitees = [];
-  }
 
   $scope.valid = function() {
-    var invitees = $scope.invitees;
-    if (!invitees) return true;
-    if (!('length' in invitees)) return false;
-    for (var i=0, ii=invitees[i]; ii; ii=invitees[++i]) {
+    /*
+    var added = $scope.added;
+    if (!added) return true;
+    if (!('length' in added)) return false;
+    for (var i=0, ii=added[i]; ii; ii=added[++i]) {
       if (!EMAIL.test(ii.id)) return false;
     }
+    */
     return true;
-  };
-
-  $scope.invite = function() {
-    if ($scope.invitees.length) {
-      var data = _.map($scope.invitees, function(i) { return i.id });
-      $scope.interaction(INTERACTION.invite, data).then(resetForm);
-    }
   };
 }
 

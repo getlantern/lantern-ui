@@ -788,13 +788,16 @@
                         }
                         opts.initSelection = function (element, callback) {
                             var data = [];
-                            $(splitVal(element.val(), opts.separator)).each(function () {
-                                var id = this, text = this, tags=opts.tags;
-                                if ($.isFunction(tags)) tags=tags();
-                                $(tags).each(function() { if (equal(this.id, id)) { text = this.text; return false; } });
-                                data.push({id: id, text: text});
-                            });
-
+                            //XXX work around https://github.com/angular-ui/angular-ui/issues/455
+                            //$(splitVal(element.val(), opts.separator)).each(function () {
+                            //    var id = this, text = this, tags=opts.tags;
+                            //    if ($.isFunction(tags)) tags=tags();
+                            //    $(tags).each(function() { if (equal(this.id, id)) { text = this.text; return false; } });
+                            //    data.push({id: id, text: text});
+                            //});
+                            try {
+                              data = $(element).data('$ngModelController').$modelValue;
+                            } catch(e) {}
                             callback(data);
                         };
                     }
@@ -1957,8 +1960,11 @@
         clearSearch: function () {
             var placeholder = this.getPlaceholder();
 
-            if (placeholder !== undefined  && this.getVal().length === 0 && this.search.hasClass("select2-focused") === false) {
+            //XXX
+            if (placeholder !== undefined  /*&& this.getVal().length === 0 && this.search.hasClass("select2-focused") === false*/) {
                 this.search.val(placeholder).addClass("select2-default");
+                //XXX
+                $(this.search).attr('placeholder', placeholder);
                 // stretch the search box to full width of the container so as much of the placeholder is visible as possible
                 this.resizeSearch();
             } else {
@@ -2100,7 +2106,9 @@
             }));
 
             choice.data("select2-data", data);
-            choice.insertBefore(this.searchContainer);
+            //XXX keep search field at the top
+            //choice.insertBefore(this.searchContainer);
+            choice.appendTo(this.searchContainer.parent());
 
             val.push(id);
             this.setVal(val);
