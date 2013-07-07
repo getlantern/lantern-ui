@@ -126,11 +126,14 @@ function RootCtrl(state, $scope, $filter, $timeout, logFactory, modelSrvc, comet
   };
 
   $scope.interaction = function(interactionid, extra) {
+    $scope.awaitingResponse = true;
     return apiSrvc.interaction(interactionid, extra)
       .success(function(data, status, headers, config) {
+        $scope.awaitingResponse = false;
         log.debug('interaction(', interactionid, extra || '', ') successful');
       })
       .error(function(data, status, headers, config) {
+        $scope.awaitingResponse = false;
         log.error('interaction(', interactionid, extra, ') failed');
         apiSrvc.exception({data: data, status: status, headers: headers, config: config});
       });

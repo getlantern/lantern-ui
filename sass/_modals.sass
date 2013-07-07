@@ -13,14 +13,19 @@
   +single-transition(opacity, 0.3s, ease)
   top: 10% // same as .modal.fade.in
 
-#waiting
+#awaitingConnect, #awaitingResponse
   +position(0, 0, 0, 0)
   +aboveModal
+
+#awaitingConnect
   padding-top: 100px
   line-height: 50px
   text-align: center
   background-color: #fff
   opacity: 0.9
+
+#awaitingResponse
+  cursor: progress
 
 .modal-header h3
   font-size: $baseFontSize * 1.25
