@@ -7035,6 +7035,12 @@ textarea {
   margin: 10px 30px 15px;
 }
 
+.modal-footer.authorize .icon-external-link {
+  color: white;
+  width: 8px;
+  opacity: 1;
+}
+
 #proxiedSites .warning {
   border: 1px dotted #c09853;
   border-radius: 8px;
