@@ -84,6 +84,7 @@
   "PROXYING_ALL_WARNING_EXPLANATION": "Only proxying sites that are blocked makes Lantern <b>faster</b> and <b>harder to block</b>.",
   "DISABLE_PROXY_ALL": "Disable proxy all traffic",
   "PROXIED_SITES_TIP": "Content on other sites included in pages on these sites will also be proxied automatically.",
+  "PROXIED_TRAFFIC_WARNING": "Your traffic through the Lantern network is not anonymized.<br>For protection from being tracked by network monitors, use <a ng-click=\"openExternal(EXTERNAL_URL.tor)\">Tor<sup><i class=\"icon-external-link\"></i></sup></a>.",
   "TIP": "Tip:",
   "PROXIED_SITES_WIKI_TIP": "Check out the",
   "PROXIED_SITES_WIKI_LINK_TEXT": "proxied sites list wiki",

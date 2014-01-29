@@ -273,6 +273,10 @@
         {{ errorLabelKey && (errorLabelKey | i18n) || '' }}
         <pre class="errorCause" ng-show="!!errorCause">{{ errorCause }}</pre>
       </div>
+      <p class="smaller error-colored pagination-centered">
+        <i class="icon-warning-sign warning-colored"></i>
+        <span compile-unsafe="'PROXIED_TRAFFIC_WARNING' | i18n"></span>
+      </p>
     </div>
   </div>
   <div class="modal-footer">
