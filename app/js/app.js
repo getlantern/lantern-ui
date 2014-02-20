@@ -85,11 +85,6 @@ var app = angular.module('app', [
       });
     }, true);
 
-    $rootScope.$watch('model.settings.mode', function (mode) {
-      $rootScope.inGiveMode = mode === MODE.give;
-      $rootScope.inGetMode = mode === MODE.get;
-    });
-
     $rootScope.$watch('model.mock', function (mock) {
       $rootScope.mockBackend = !!mock;
     });

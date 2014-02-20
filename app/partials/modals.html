@@ -103,7 +103,7 @@
     <div class="tagLine">{{ 'TAG_LINE' | i18n }}</div>
     <div ng-show="model.connectivity.internet == true">
       <div>
-        <button type="button" class="btn btn-large btn-get-inverse enter-get-mode" ng-click="interaction(INTERACTION.getStarted)"
+        <button type="button" class="btn btn-large btn-give-inverse enter-get-mode" ng-click="interaction(INTERACTION.getStarted)"
           focus-on="show">{{ 'GET_STARTED' | i18n }}</button>
       </div>
     </div>
@@ -400,7 +400,7 @@
     <h3>{{ 'FINISHED_TITLE' | i18n }}</h3>
   </div>
   <div class="modal-body" id="finished">
-    <p>{{ inGiveMode && 'FINISHED_PROMPT_GIVE' || 'FINISHED_PROMPT_GET' | i18n }}</p>
+    <p>{{ 'FINISHED_PROMPT_GET' | i18n }}</p>
   </div>
   <div class="modal-footer">
     <div class="modal-status smallest">
@@ -533,7 +533,7 @@
   </div>
   <div class="modal-body" id="sponsor">
     <p>
-      {{ inGetMode && 'SPONSOR_PROMPT_GET' || 'SPONSOR_PROMPT_GIVE' | i18n }}
+      {{ 'SPONSOR_PROMPT_GET' || 'SPONSOR_PROMPT_GIVE' | i18n }}
       <a ng-click="openExternal(EXTERNAL_URL.cloudServers)" class="more-info">
         {{ 'MORE_INFO' | i18n }}<sup><i class="icon-external-link"></i></sup></a>
     </p>
@@ -589,27 +589,8 @@
         </div>
       </dd>
 
-      <dt ng-hide="inCensoringCountry">{{ 'MODE' | i18n }}</dt>
-      <dd ng-hide="inCensoringCountry">
-        <div class="btn-group">
-          <button type="button" class="btn btn-mini btn-give"
-                  ng-class="{active: inGiveMode}"
-                  ng-disabled="inGiveMode"
-                  ng-click="interaction(MODE.give)">
-                  <i ng-show="inCensoringCountry" class="icon-warning-sign"></i>
-                  {{ 'GIVE_ACCESS' | i18n }}
-          </button>
-          <button type="button" class="btn btn-mini btn-get"
-                  ng-class="{active: inGetMode}"
-                  ng-disabled="inGetMode"
-                  ng-click="interaction(MODE.get)">
-                  {{ 'GET_ACCESS' | i18n }}
-          </button>
-        </div>
-      </dd>
-
-      <dt collapse="inGiveMode">{{ 'PROXY' | i18n }}</dt>
-      <dd collapse="inGiveMode" id="proxy-settings">
+      <dt>{{ 'PROXY' | i18n }}</dt>
+      <dd id="proxy-settings">
         <button type="button" class="btn btn-mini"
                 ng-click="interaction(INTERACTION.proxiedSites)">
           <i ui-if="model.settings.proxyAllSites" class="icon-warning-sign warning-colored"></i>
