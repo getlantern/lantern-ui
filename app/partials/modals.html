@@ -102,20 +102,9 @@
     </div>
     <div class="tagLine">{{ 'TAG_LINE' | i18n }}</div>
     <div ng-show="model.connectivity.internet == true">
-      <div ng-show="inCensoringCountry">
-        <button type="button" class="btn btn-large btn-get-inverse enter-get-mode" ng-click="interaction(MODE.get)"
-          focus-on="show">{{ 'GET_ACCESS' | i18n }}</button>
-      </div>
-      <div ng-hide="inCensoringCountry">
-        <button type="button" ng-hide="inCensoringCountry" ng-click="interaction(MODE.give)"
-          class="btn btn-large btn-give-inverse enter-give-mode" focus-on="show" tabindex="{{show && 1 || ''}}">
-          <i ng-show="inCensoringCountry" class="icon-warning-sign"></i>
-          {{ 'GIVE_ACCESS' | i18n }}
-        </button>
-        <div class="orIfYouNeed">
-          {{ 'OR_IF_YOU_NEED' | i18n }}
-          <a href="#" class="get-colored always-underlined enter-get-mode" ng-click="interaction(MODE.get)" tabindex="{{show && 2 || ''}}">{{ 'GET_ACCESS' | i18n }}</a>
-        </div>
+      <div>
+        <button type="button" class="btn btn-large btn-get-inverse enter-get-mode" ng-click="interaction(INTERACTION.getStarted)"
+          focus-on="show">{{ 'GET_STARTED' | i18n }}</button>
       </div>
     </div>
     <div class="internetRequired fadeInOut" ng-hide="model.connectivity.internet != false">
