@@ -73,7 +73,8 @@ var DEFAULT_LANG = 'en_US',
       docs: 'https://github.com/getlantern/lantern/wiki',
       getInvolved: 'https://github.com/getlantern/lantern/wiki/Get-Involved',
       proxiedSitesWiki: 'https://github.com/getlantern/lantern-proxied-sites-lists/wiki',
-      developers: 'https://github.com/getlantern/lantern'
+      developers: 'https://github.com/getlantern/lantern',
+      familyShield: 'http://www.opendns.com/home-internet-security/parental-controls/opendns-familyshield/'
     },
     // enums
     MODE = makeEnum(['give', 'get', 'unknown']),
@@ -132,7 +133,8 @@ var DEFAULT_LANG = 'en_US',
       'systemProxy',
       'proxyAllSites',
       'proxyPort',
-      'proxiedSites']),
+      'proxiedSites',
+      'useFamilyShield']),
     PEER_TYPE = makeEnum([
       'pc',
       'cloud',
