@@ -42,7 +42,8 @@
     "proxyPort":8787,
     "systemProxy":true,
     "proxyAllSites":false,
-    "proxiedSites":["blocked.com"]
+    "proxiedSites":["blocked.com"],
+    "useFamilyShield":false
   },
   "version":{
     "installed":{

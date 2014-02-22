@@ -654,13 +654,14 @@
           </div>
         </div>
       </dd>
-      
+
       <dt collapse="inGetMode" ng-bind-html="'FAMILYSHIELD' | i18n"></dt>
       <dd collapse="inGetMode" id="app-settings">
         <label class="checkbox">
-          <input type="checkbox" ng-model="model.settings.useFamilyShield" focus-on="show"
-                 ng-click="changeSetting(SETTING.useFamilyShield, model.settings.useFamilyShield)">
-          <span ng-bind-html="'USE_FAMILY_SHIELD' | i18n"></span> <a ng-click="openExternal(EXTERNAL_URL.familyShield)">Family Shield&#8482;</a>
+          <input type="checkbox" ng-model="useFamilyShield"
+                 ng-click="changeSetting(SETTING.useFamilyShield, useFamilyShield)">
+          <span compile-unsafe="'USE_FAMILY_SHIELD' | i18n"></span>
+          <div class="smallest">{{'FAMILY_SHIELD_DESC'|i18n}}</div>
         </label>
       </dd>
     </dl>

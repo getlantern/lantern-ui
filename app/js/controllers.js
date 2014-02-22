@@ -136,6 +136,10 @@ function SettingsCtrl($scope, MODAL) {
   $scope.$watch('model.settings.proxyAllSites', function (proxyAllSites) {
     $scope.proxyAllSites = proxyAllSites;
   });
+
+  $scope.$watch('model.settings.useFamilyShield', function (useFamilyShield) {
+    $scope.useFamilyShield = useFamilyShield;
+  });
 }
 
 function AuthorizeCtrl($scope, $timeout, MODAL, CONNECTIVITY) {

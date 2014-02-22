@@ -7,7 +7,7 @@ var util = require('util'),
     events = require('events');
 var MockBackend = require('../mock/backend').MockBackend;
 
-var DEFAULT_HOST = '127.0.0.1';
+var DEFAULT_HOST = '0.0.0.0';
 var DEFAULT_PORT = 8000;
 
 function main(argv) {
