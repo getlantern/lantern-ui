@@ -205,34 +205,34 @@ exports.SCENARIOS = {
       func: function() {
               var roster = [{
                 email: 'lantern_friend1@example.com',
-                name: 'Snyder Pearson',
+                name: '',
                 link: '',
                 picture: 'img/default-avatar.png',
                 status: 'away',
                 statusMessage: 'meeting'
               },{
                 email: 'lantern_friend2@example.com',
-                name: 'Leah X Schmidt',
+                name: '',
                 link: '',
                 picture: 'img/default-avatar.png',
                 status: 'available',
                 statusMessage: 'Bangkok'
               },{
                 email: 'user1@example.com',
-                name: 'Willie Forkner',
+                name: '',
                 link: '',
                 picture: 'img/default-avatar.png',
                 status: 'idle',
                 statusMessage: 'sleeping'
               },{
                 email: 'user2@example.com',
-                name: 'J.P. Zenger',
+                name: '',
                 link: '',
                 picture: 'img/default-avatar.png',
                 status: 'offline'
               },{
                 email: 'lantern_power_user@example.com',
-                name: 'Myles Horton',
+                name: '',
                 link: '',
                 picture: 'img/default-avatar.png',
                 status: 'available',
@@ -253,19 +253,19 @@ exports.SCENARIOS = {
                           {
                            email: 'lantern_friend1@example.com',
                            picture: 'img/default-avatar.png',
-                           name: 'Snyder Pearson',
+                           name: '',
                            status: FRIEND_STATUS.friend
                           },
                           {
                            email: 'lantern_friend2+a_really_realy_long_entry@example.com',
                            picture: 'img/default-avatar.png',
-                           name: 'Leah X Schmidt',
+                           name: '',
                            status: FRIEND_STATUS.friend
                           },
                           {
                            email: 'lantern_power_user@example.com',
                            picture: 'img/default-avatar.png',
-                           name: 'Myles Horton',
+                           name: '',
                            status: FRIEND_STATUS.friend
                           },
                           {
