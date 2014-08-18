@@ -188,7 +188,7 @@ exports.SCENARIOS = {
               sleep.usleep(100000);
               this.sync({'/connectivity/gtalk': CONNECTIVITY.connected,
                 '/profile': {
-                  email: 'user@example.com',
+                  email: 'Sample data for user@example.com',
                   name: 'Your Name Here',
                   link: 'https://plus.google.com/1234567',
                   picture: 'img/default-avatar.png',

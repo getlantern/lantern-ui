@@ -281,24 +281,7 @@ angular.module('app.services', [])
 
     // connect() starts listening for peer updates
     function connect() {
-      var source = new EventSource('http://127.0.0.1:15670/');
-      source.addEventListener('message', function(e) {
-        var data = JSON.parse(e.data);
-        if (data.type == "peer") {
-          var peer = data.data;
-          flashlightPeers[peer.peerid] = peer;
-        }
-      }, false);
-  
-      source.addEventListener('open', function(e) {
-        $log.debug("flashlight connection opened");
-      }, false);
-  
-      source.addEventListener('error', function(e) {
-        if (e.readyState == EventSource.CLOSED) {
-          $log.debug("flashlight connection closed");
-        }
-      }, false);
+
     }
     
     // updateModel updates a model that doesn't include flashlight peers with

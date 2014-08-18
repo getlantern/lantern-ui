@@ -16,7 +16,7 @@
     <div id="stats" ng-show="!inGetMode || model.connectivity.nproxies > 0">
       <div ng-show="statsLoaded">
         {{ 'NUSERS_ONLINE' | i18n:(model.globalStats.gauges.userOnline || 0) }} ·
-        {{ 'NUSERS_EVER' | i18n:(model.globalStats.gauges.userOnlineEver + model.globalStats.counters.userOnlineEverOld) }} ·
+	25,249 users ever ·
         {{ model.globalStats.counters.bytesGotten | prettyBytes }} {{ 'TRANSFERRED_GLOBALLY' | i18n }}
       </div>
       <div ng-hide="statsLoaded">
@@ -32,15 +32,11 @@
   <div id="appInfo">
     {{ 'LANTERN' | i18n }}
     {{ model.version.installed | version:true }}
-    <span ng-show="model.version.updateAvailable" class="update-available">
-      · <i class="icon-exclamation-sign"></i>
-      <a ng-click="interaction(INTERACTION.updateAvailable)">{{ 'UPDATE_AVAILABLE_TITLE' | i18n }}</a>
+    <span>
+      · <a>{{ 'ABOUT' | i18n }}</a>
     </span>
     <span>
-      · <a ng-click="interaction(INTERACTION.about)">{{ 'ABOUT' | i18n }}</a>
-    </span>
-    <span>
-      · <a ng-click="interaction(INTERACTION.contact)">{{ 'CONTACT' | i18n }}</a>
+      · <a>{{ 'CONTACT' | i18n }}</a>
     </span>
     <!--
     <span>
