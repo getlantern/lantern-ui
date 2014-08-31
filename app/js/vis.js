@@ -25,7 +25,8 @@ angular.module('app.vis', [])
   .directive('globe', function () {
     return function (scope, element) {
       var d = scope.path({type: 'Sphere'});
-      element.attr('d', d);
+      console.log(d);
+      //element.attr('d', d);
     };
   })
   .directive('self', function () {
@@ -107,6 +108,7 @@ angular.module('app.vis', [])
         //XXX need to do something like this to use latest topojson:
         //var f = topojson.feature(world, world.objects.countries).features;
         var f = topojson.object(world, world.objects.countries).geometries;
+        console.log(f);
         d3.select(element[0]).selectAll('path').data(f).enter().append("g").append('path')
           .each(function (d) {
             var el = d3.select(this);
