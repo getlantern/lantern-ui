@@ -15,7 +15,7 @@
     <link href="_css/app.css" rel="stylesheet">
 
     <script src="bower_components/jsonpatch/lib/jsonpatch.js"></script>
-    <script src="bower_components/jquery/jquery.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/cometd-js-jquery/org/cometd.js"></script>
     <script src="bower_components/cometd-js-jquery/jquery/jquery.cometd.js"></script>
     <script src="bower_components/angular/angular.js"></script>
@@ -23,13 +23,10 @@
 
     <!-- we host a copy of google's analytics.js locally -->
     <script src="lib/analytics.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/event/event.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/if/if.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/showhide/showhide.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/validate/validate.js"></script>
+    <script src="bower_components/angular-ui-utils/ui-utils.min.js"></script>
     <!-- XXX using our own build of ui-bootstrap with custom patches -->
     <!--script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script-->
-    <script src="lib/ui-bootstrap-tpls-0.5.0-SNAPSHOT.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
     <script src="bower_components/lodash/dist/lodash.js"></script>
     <script src="bower_components/select2/select2.js"></script>
     <script src="bower_components/angular-ui-select2/src/select2.js"></script>
@@ -83,10 +80,13 @@
     </div>
 
     <div id="alerts">
-      <alert ng-repeat="(id, notification) in model.notifications" ui-animate
-             type="notification.type" close="interaction(INTERACTION.close, {notification: id})">
-        <span ng-bind-html="notification.message"></span>
-      </alert>
+      <div ng-repeat="(id, notification) in model.notifications" ng-hide="notification.background && (model.modal && model.modal != 'none')">
+        <alert ui-animate
+               type="notification.type"
+               close="interaction(INTERACTION.close, {notification: id})">
+          <span dynamic="notification.message"></span>
+        </alert>
+      </div>
     </div>
 
     <div ng-include src="'partials/topbar.html'"></div>

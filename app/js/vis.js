@@ -25,7 +25,8 @@ angular.module('app.vis', [])
   .directive('globe', function () {
     return function (scope, element) {
       var d = scope.path({type: 'Sphere'});
-      element.attr('d', d);
+      console.log(d);
+      //element.attr('d', d);
     };
   })
   .directive('self', function () {
@@ -113,7 +114,8 @@ angular.module('app.vis', [])
             el.attr('d', scope.path).attr('stroke-opacity', 0);
             if (d.alpha2) {
               el.attr('class', d.alpha2 + " COUNTRY_KNOWN")
-                .attr('tooltip-placement', 'mouse')
+                //.attr('tooltip-placement', 'mouse')
+                .attr('tooltip-trigger', 'mouseenter')
                 //.attr('tooltip-trigger', 'click') // uncomment out to make it easier to inspect tooltips when debugging
                 .attr('tooltip-html-unsafe', ttTmpl(d.alpha2));
               $compile(this)(scope);

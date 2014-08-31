@@ -9,21 +9,24 @@ var app = angular.module('app', [
   'app.directives',
   'app.vis',
   'ngSanitize',
-  'ui.event',
-  'ui.if',
+  'ui.utils',
   'ui.showhide',
   'ui.select2',
   'ui.validate',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'ui.bootstrap.tpls'
   ])
-  // angular ui bootstrap config
-  .config(function($dialogProvider) {
-    $dialogProvider.options({
-      backdrop: false,
-      dialogFade: true,
-      keyboard: false,
-      backdropClick: false
-    });
+  .directive('dynamic', function ($compile) {
+    return {
+      restrict: 'A',
+      replace: true,
+      link: function (scope, ele, attrs) {
+        scope.$watch(attrs.dynamic, function(html) {
+          ele.html(html);
+          $compile(ele.contents())(scope);
+        });
+      }
+    };
   })
   .config(function($tooltipProvider) {
     $tooltipProvider.options({
@@ -176,6 +179,10 @@ var app = angular.module('app', [
 
     $rootScope.changeLang = function(lang) {
       return $rootScope.interaction(INTERACTION.changeLang, {lang: lang});
+    };
+
+    $rootScope.openRouterConfig = function() {
+      return $rootScope.interaction(INTERACTION.routerConfig);
     };
 
     $rootScope.openExternal = function(url) {
