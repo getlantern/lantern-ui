@@ -108,14 +108,14 @@ angular.module('app.vis', [])
         //XXX need to do something like this to use latest topojson:
         //var f = topojson.feature(world, world.objects.countries).features;
         var f = topojson.object(world, world.objects.countries).geometries;
-        console.log(f);
         d3.select(element[0]).selectAll('path').data(f).enter().append("g").append('path')
           .each(function (d) {
             var el = d3.select(this);
             el.attr('d', scope.path).attr('stroke-opacity', 0);
             if (d.alpha2) {
               el.attr('class', d.alpha2 + " COUNTRY_KNOWN")
-                .attr('tooltip-placement', 'mouse')
+                //.attr('tooltip-placement', 'mouse')
+                .attr('tooltip-trigger', 'mouseenter')
                 //.attr('tooltip-trigger', 'click') // uncomment out to make it easier to inspect tooltips when debugging
                 .attr('tooltip-html-unsafe', ttTmpl(d.alpha2));
               $compile(this)(scope);

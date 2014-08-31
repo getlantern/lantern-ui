@@ -40,12 +40,10 @@ function UpdateAvailableCtrl($scope, MODAL) {
   });
 }
 
-function UnexpectedStateCtrl($scope, cometdSrvc, apiSrvc, modelSrvc, MODAL, REQUIRED_API_VER, INTERACTION, logFactory) {
+function UnexpectedStateCtrl($scope, $modal, cometdSrvc, apiSrvc, modelSrvc, MODAL, REQUIRED_API_VER, INTERACTION, logFactory) {
   var log = logFactory('UnexpectedStateCtrl');
 
   $scope.modelSrvc = modelSrvc;
-
-  $scope.show = false;
   $scope.$watch('modelSrvc.sane', function (sane) {
     if (!sane) {
       // disconnect immediately from insane backend
