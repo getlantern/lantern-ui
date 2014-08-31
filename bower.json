@@ -13,7 +13,8 @@
     "jquery": "2.1.1",
     "jsonpatch": "1.0.0-rc1",
     "lodash": "2.4.1",
-    "select2": "3.5.1"
+    "select2": "3.5.1",
+    "angular-bootstrap": "~0.11.0"
   },
   "devDependencies": {
     "angular-mocks": "latest",
