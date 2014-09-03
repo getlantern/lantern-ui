@@ -101,18 +101,52 @@ angular.module('app.vis', [])
         }
       });
 
+      scope.g = d3.select(element[0]).append("g");
+
+      scope.move = function() {
+          var width = document.getElementById('vis').offsetWidth;
+          var height = width / 2;
+
+          var t = d3.event.translate;
+          var s = d3.event.scale; 
+          var h = height/4;
+
+
+          t[0] = Math.min(
+              (width/height)  * (s - 1), 
+              Math.max( width * (1 - s), t[0] )
+          );
+
+          t[1] = Math.min(
+              h * (s - 1) + h * s, 
+              Math.max(height  * (1 - s) - h * s, t[1])
+          );
+
+          zoom.translate(t);
+          scope.g.attr("transform", "translate(" + t + ")scale(" + s + ")");
+
+          //adjust the country hover stroke width based on zoom level
+          d3.selectAll(".country").style("stroke-width", 1.5 / s);
+      };
+
+      var zoom = d3.behavior.zoom()
+      .scaleExtent([1, 9])
+      .on("zoom", scope.move);
+
+
       // Set up the world map once and only once
       d3.json('data/world.topojson', function (error, world) {
         if (error) throw error;
         //XXX need to do something like this to use latest topojson:
         //var f = topojson.feature(world, world.objects.countries).features;
         var f = topojson.object(world, world.objects.countries).geometries;
-        d3.select(element[0]).selectAll('path').data(f).enter().append("g").append('path')
+
+        scope.g.call(zoom).selectAll('path').data(f).enter().append('path')
           .each(function (d) {
             var el = d3.select(this);
             el.attr('d', scope.path).attr('stroke-opacity', 0);
             if (d.alpha2) {
-              el.attr('class', d.alpha2 + " COUNTRY_KNOWN")
+              el.attr('class', d.alpha2 + " COUNTRY_KNOWN country")
                 .attr('tooltip-placement', 'mouse')
                 //.attr('tooltip-trigger', 'click') // uncomment out to make it easier to inspect tooltips when debugging
                 .attr('tooltip-html-unsafe', ttTmpl(d.alpha2));
@@ -266,6 +300,7 @@ angular.module('app.vis', [])
        *   peer
        * 
        */
+
       function renderPeers(peers, oldPeers) {
         if (!peers) return;
 
@@ -308,17 +343,47 @@ angular.module('app.vis', [])
         // Create points and hover areas for each peer
         peerItems.append("path").classed("peer", true);
         peerItems.append("path").classed("peer-hover-area", true);
+
+        allPeers.select("g.peer path.peer").attr("d", function(peer) {
+            return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]});
+        }).attr("class", function(peer) {
+            var result = "peer " + peer.mode + " " + peer.type;
+            if (peer.connected) {
+                result += " connected";
+            }
+            return result;
+        });
+
+        /*peers.forEach(function(peer) {
+            var gpoint = scope.g.append("g");
+            var x = projection([peer.lat,peer.lon])[0];
+            var y = projection([peer.lat,peer.lon])[1];
+            if (isNaN(x) || isNaN(y)) {
+                return;
+            }
+
+            var mode = "peer " + peer.mode + " " + peer.type;
+            if (peer.connected) {
+                mode += " connected";
+            }
+
+            gpoint.append("svg:circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("class", mode)
+            .style("red")
+            .attr("r", 1.5);
+        });*/
+
         
         // Configure points and hover areas on each update
-        allPeers.select("g.peer path.peer").attr("d", function(peer) {
-          return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]})
-        }).attr("class", function(peer) {
+        /*allPeers.select("g.peer path.peer").attr("class", function(peer) {
           var result = "peer " + peer.mode + " " + peer.type;
           if (peer.connected) {
             result += " connected";
           }
           return result;
-        });
+        });*/
         
         // Configure hover areas for all peers
         allPeers.select("g.peer path.peer-hover-area").attr("d", function(peer) {
@@ -326,16 +391,16 @@ angular.module('app.vis', [])
         });
         
         // Add arcs for new peers
-        newPeers.append("path")
+        /*newPeers.append("path")
           .classed("connection", true)
-          .attr("id", function(peer) { return "connection_to_" + peerIdentifier(peer); });
-        
+          .attr("id", function(peer) { return "connection_to_" + peerIdentifier(peer); });*/
+          
         // Set paths for arcs for all peers
-        allPeers.select("path.connection")
+        /*allPeers.select("path.connection")
           .attr("d", scope.pathConnection)
           .attr("stroke-opacity", function(peer) {
             return connectionOpacityScale(peer.bpsUpDn || 0);
-          });
+          });*/
         
         // Animate connected/disconnected peers
         var newlyConnectedPeersSelector = "";
@@ -401,12 +466,12 @@ angular.module('app.vis', [])
       }
       
       // Handle model changes
-      scope.$watch('model.peers', renderPeers, true);
+      //scope.$watch('model.peers', renderPeers, true);
       
       // Handle resize
       scope.$on("mapResized", function() {
         // Whenever the map resizes, we need to re-render the peers and arcs
-        renderPeers(scope.model.peers, scope.model.peers);
+        //renderPeers(scope.model.peers, scope.model.peers);
         
         // The above render call left the arcs alone because there were no
         // changes.  We now need to do some additional maintenance on the arcs.
@@ -425,9 +490,12 @@ angular.module('app.vis', [])
   });
 
 function VisCtrl($scope, $window, $timeout, $filter, logFactory, modelSrvc, apiSrvc) {
+    var width = document.getElementById('vis').offsetWidth;
+    var height = width / 2;
+
   var log = logFactory('VisCtrl'),
       model = modelSrvc.model,
-      projection = d3.geo.mercator(),
+      projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
 
