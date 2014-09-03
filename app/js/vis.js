@@ -24,8 +24,7 @@ angular.module('app.vis', [])
   })
   .directive('globe', function () {
     return function (scope, element) {
-      var d = scope.path({type: 'Sphere'});
-      console.log(d);
+      //var d = scope.path({type: 'Sphere'});
       //element.attr('d', d);
     };
   })
@@ -44,9 +43,10 @@ angular.module('app.vis', [])
   })
   .directive('countries', function ($compile, $timeout) {
 
-    function ttTmpl(alpha2) {
+    function ttTmpl(alpha3) {
+      var alpha2 = 'US';
       return '<div class="vis">'+
-        '<div class="header">{{ "'+alpha2+'" | i18n }}</div>'+
+        '<div class="header">'+ alpha3 +'</div>'+
         '<div class="give-colored">{{ "NUSERS_ONLINE" | i18n:model.countries.'+alpha2+'.stats.gauges.userOnlineGiving || 0:true }} {{ "GIVING_ACCESS" | i18n }}</div>'+
         '<div class="get-colored">{{ "NUSERS_ONLINE" | i18n:model.countries.'+alpha2+'.stats.gauges.userOnlineGetting || 0:true }} {{ "GETTING_ACCESS" | i18n }}</div>'+
         '<div class="nusers {{ (!model.countries.'+alpha2+'.stats.gauges.userOnlineEver && !model.countries.'+alpha2+'.stats.counters.userOnlineEverOld) && \'gray\' || \'\' }}">'+
@@ -102,27 +102,92 @@ angular.module('app.vis', [])
         }
       });
 
+      scope.g = d3.select(element[0]).append("g");
+      var width = document.getElementById('vis').offsetWidth;
+      var height = width / 2;
+
+      scope.move = function() {
+
+          var t = d3.event.translate;
+          var s = d3.event.scale; 
+          var h = height/4;
+
+
+          t[0] = Math.min(
+              (width/height)  * (s - 1), 
+              Math.max( width * (1 - s), t[0] )
+          );
+
+          t[1] = Math.min(
+              h * (s - 1) + h * s, 
+              Math.max(height  * (1 - s) - h * s, t[1])
+          );
+
+          zoom.translate(t);
+          scope.g.attr("transform", "translate(" + t + ")scale(" + s + ")");
+
+          //adjust the country hover stroke width based on zoom level
+          d3.selectAll(".country").style("stroke-width", 1.5 / s);
+      };
+
+      var zoom = d3.behavior.zoom()
+      .scaleExtent([1, 9])
+      .on("zoom", scope.move);
+      function clickMap() {
+          var latlon = scope.projection.invert(d3.mouse(this));
+      }
+ 
+
+      scope.g.call(zoom).on("click", clickMap);
+
+
       // Set up the world map once and only once
-      d3.json('data/world.topojson', function (error, world) {
+      d3.json('data/world-topo-min.json', function (error, world) {
         if (error) throw error;
         //XXX need to do something like this to use latest topojson:
         //var f = topojson.feature(world, world.objects.countries).features;
-        var f = topojson.object(world, world.objects.countries).geometries;
-        d3.select(element[0]).selectAll('path').data(f).enter().append("g").append('path')
+        //var f = topojson.object(world, world.objects.countries).geometries;
+        var f = topojson.feature(world, world.objects.countries).features;
+
+        var country = scope.g.selectAll(".country").data(f);
+        var active;
+
+        function reset() {
+            scope.g.selectAll(".active").classed("active", active = false);
+            scope.g.transition().duration(750).attr("transform", "");
+        }
+
+
+
+        function cclick(d) {
+            if (active === d) return reset();
+            scope.g.selectAll(".active").classed("active", false);
+            d3.select(this).classed("active", active = d);
+
+            var b = scope.path.bounds(d);
+            scope.g.transition().duration(750).attr("transform",
+                                              "translate(" + scope.projection.translate() + ")"
+                                              + "scale(" + .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height) + ")"
+                                              + "translate(" + -(b[1][0] + b[0][0]) / 2 + "," + -(b[1][1] + b[0][1]) / 2 + ")");
+        }
+
+
+        country.enter().insert('path')
+          .on("click", cclick)
+          /*.attr('d', scope.path)
+          .attr('class', d.alpha2 + " COUNTRY_KNOWN country")
+          .attr('id', function(d, i) { return d.id; });
+          .attr('tooltip-placement', 'mouse')*/
           .each(function (d) {
             var el = d3.select(this);
             el.attr('d', scope.path).attr('stroke-opacity', 0);
-            if (d.alpha2) {
-              el.attr('class', d.alpha2 + " COUNTRY_KNOWN")
-                //.attr('tooltip-placement', 'mouse')
-                .attr('tooltip-trigger', 'mouseenter')
+              el.attr('class', d.properties.name + " COUNTRY_KNOWN country")
+                .attr('tooltip-placement', 'mouse')
                 //.attr('tooltip-trigger', 'click') // uncomment out to make it easier to inspect tooltips when debugging
-                .attr('tooltip-html-unsafe', ttTmpl(d.alpha2));
+                .attr('tooltip-html-unsafe', ttTmpl(d.properties.name));
               $compile(this)(scope);
-            } else {
-              el.attr('class', 'COUNTRY_UNKNOWN');
-            }
           });
+ 
       });
       
       /*
@@ -268,8 +333,9 @@ angular.module('app.vis', [])
        *   peer
        * 
        */
+
       function renderPeers(peers, oldPeers) {
-        if (!peers) return;
+          if (!peers) return;
 
         // disregard peers on null island
         peers = noNullIsland(peers);
@@ -310,11 +376,19 @@ angular.module('app.vis', [])
         // Create points and hover areas for each peer
         peerItems.append("path").classed("peer", true);
         peerItems.append("path").classed("peer-hover-area", true);
-        
-        // Configure points and hover areas on each update
+
         allPeers.select("g.peer path.peer").attr("d", function(peer) {
-          return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]})
+            return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]});
         }).attr("class", function(peer) {
+            var result = "peer " + peer.mode + " " + peer.type;
+            if (peer.connected) {
+                result += " connected";
+            }
+            return result;
+        });
+
+        // Configure points and hover areas on each update
+        allPeers.select("g.peer path.peer").attr("class", function(peer) {
           var result = "peer " + peer.mode + " " + peer.type;
           if (peer.connected) {
             result += " connected";
@@ -331,7 +405,7 @@ angular.module('app.vis', [])
         newPeers.append("path")
           .classed("connection", true)
           .attr("id", function(peer) { return "connection_to_" + peerIdentifier(peer); });
-        
+          
         // Set paths for arcs for all peers
         allPeers.select("path.connection")
           .attr("d", scope.pathConnection)
@@ -403,12 +477,12 @@ angular.module('app.vis', [])
       }
       
       // Handle model changes
-      scope.$watch('model.peers', renderPeers, true);
+      //scope.$watch('model.peers', renderPeers, true);
       
       // Handle resize
       scope.$on("mapResized", function() {
         // Whenever the map resizes, we need to re-render the peers and arcs
-        renderPeers(scope.model.peers, scope.model.peers);
+        //renderPeers(scope.model.peers, scope.model.peers);
         
         // The above render call left the arcs alone because there were no
         // changes.  We now need to do some additional maintenance on the arcs.
@@ -427,19 +501,23 @@ angular.module('app.vis', [])
   });
 
 function VisCtrl($scope, $window, $timeout, $filter, logFactory, modelSrvc, apiSrvc) {
+    var width = document.getElementById('vis').offsetWidth;
+    var height = width / 2;
+
   var log = logFactory('VisCtrl'),
       model = modelSrvc.model,
-      projection = d3.geo.mercator(),
+      projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
 
   $scope.projection = projection;
+  $scope.path = d3.geo.path().projection(projection);
 
-  $scope.path = function (d, pointRadius) {
+/*  $scope.path = function (d, pointRadius) {
     path.pointRadius(pointRadius || DEFAULT_POINT_RADIUS);
     // https://code.google.com/p/chromium/issues/detail?id=231626
     return path(d) || 'M0 0';
-  };
+  };*/
 
   $scope.pathConnection = function (peer) {
     var MINIMUM_PEER_DISTANCE_FOR_NORMAL_ARCS = 30;
