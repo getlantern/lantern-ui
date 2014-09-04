@@ -113,11 +113,22 @@ are written are useful and are set up with continuous integration in
 
 To run the tests locally, first install karma (`sudo` as necessary):
 
-    npm install -g karma
+    npm install karma
 
-and [PhantomJS](http://phantomjs.org/) (brew install phantomjs).
+and [PhantomJS](http://phantomjs.org/):
 
-Then look in `.travis.yml` for the commands to run the unit and end-to-end tests.
+    npm install phantomjs
+
+and the required Karma plugins:
+
+    npm install karma-jasmine
+    npm install karma-phantomjs-launcher
+
+Then run:
+
+    npm test
+
+to run the unit tests. End-to-end tests not yet implemented.
 
 **TODO**: *expand this*
 

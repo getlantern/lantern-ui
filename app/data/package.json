@@ -15,7 +15,8 @@
   "scripts": {
     "predeploy": "rm -f ./package.json && cp ./app/data/package.json .",
     "postdeploy": "rm -f ./package.json && ln -s ./app/data/package.json .",
-    "start": "scripts/web-server.js"
+    "start": "scripts/web-server.js",
+    "test": "./node_modules/karma/bin/karma start config/karma.conf.js --single-run --browsers PhantomJS --reporters=dots"
   },
   "repository": {
     "type": "git",
