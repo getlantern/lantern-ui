@@ -457,7 +457,7 @@ angular.module('app.vis', [])
       .attr("width", "100%")
       .attr("height", "100%")
       .attr("resizeable", "1")
-      .call(d3.behavior.zoom().on("zoom", redraw))
+      .call(d3.behavior.zoom().scaleExtent([1,10]).on("zoom", redraw))
       .append("g").attr("id", "countries").attr("countries", "");
       svg.append("g").attr("id", "peers").attr("peers", "");
 
