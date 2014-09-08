@@ -1,7 +1,7 @@
 'use strict';
 
 function RootCtrl($scope, flashlightStats) {
-  //flashlightStats.connect();
+  flashlightStats.connect();
 }
 
 function SettingsLoadFailureCtrl($scope, MODAL) {

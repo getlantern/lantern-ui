@@ -114,24 +114,6 @@ angular.module('app.vis', [])
             var country = scope.g.selectAll(".country").data(f);
             var active;
 
-            function reset() {
-                scope.g.selectAll(".active").classed("active", active = false);
-                scope.g.transition().duration(750).attr("transform", "");
-            }
-
-            function cclick(d) {
-                if (active === d) return reset();
-                scope.g.selectAll(".active").classed("active", false);
-                d3.select(this).classed("active", active = d);
-
-                var b = scope.path.bounds(d);
-                scope.g.transition().duration(750).attr("transform",
-                                                        "translate(" + scope.projection.translate() + ")"
-                                                        + "scale(" + .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height) + ")"
-                                                        + "translate(" + -(b[1][0] + b[0][0]) / 2 + "," + -(b[1][1] + b[0][1]) / 2 + ")");
-            }
-
-
             country.enter().insert('path')
             //.on("click", cclick)
             /*.attr('d', scope.path)
@@ -463,8 +445,8 @@ angular.module('app.vis', [])
 
       var log = logFactory('VisCtrl'),
       model = modelSrvc.model,
-      projection = d3.geo.mercator().translate([0, 0]).scale(4000),
-      //projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
+      //projection = d3.geo.mercator(),
+      projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
       var color = d3.scale.category10();
@@ -499,25 +481,6 @@ angular.module('app.vis', [])
               '</div>';
       }
 
-
-      function reset() {
-          svg.selectAll(".active").classed("active", active = false);
-          svg.transition().duration(750).attr("transform", "");
-      }                             
-
-      function cclick(d) {
-          if (active === d) return reset();
-          svg.selectAll(".active").classed("active", false);
-          d3.select(this).classed("active", active = d);
-
-          var b = $scope.path.bounds(d);
-          svg.transition().duration(750).attr("transform",
-                                              "translate(" + $scope.projection.translate() + ")"
-                                              + "scale(" + .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height) + ")"
-                                              + "translate(" + -(b[1][0] + b[0][0]) / 2 + "," + -(b[1][1] + b[0][1]) / 2 + ")");
-      }
-
-
       function ready(error, world, names) {
 
           var countries = topojson.object(world, world.objects.countries).geometries,
@@ -541,7 +504,6 @@ angular.module('app.vis', [])
           country
           .enter()
           .append("g")
-          //.on("click", cclick)
           .append("path")
           .attr("class", "country")    
           .attr("title", function(d,i) { return d.name; })
