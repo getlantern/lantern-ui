@@ -102,44 +102,7 @@ angular.module('app.vis', [])
         }
       });
 
-      scope.g = d3.select(element[0]).append("g");
-      var width = document.getElementById('vis').offsetWidth;
-      var height = width / 2;
-
-      scope.move = function() {
-
-          var t = d3.event.translate;
-          var s = d3.event.scale; 
-          var h = height/4;
-
-
-          t[0] = Math.min(
-              (width/height)  * (s - 1), 
-              Math.max( width * (1 - s), t[0] )
-          );
-
-          t[1] = Math.min(
-              h * (s - 1) + h * s, 
-              Math.max(height  * (1 - s) - h * s, t[1])
-          );
-
-          zoom.translate(t);
-          scope.g.attr("transform", "translate(" + t + ")scale(" + s + ")");
-
-          //adjust the country hover stroke width based on zoom level
-          d3.selectAll(".country").style("stroke-width", 1.5 / s);
-      };
-
-      var zoom = d3.behavior.zoom()
-      .scaleExtent([1, 9])
-      .on("zoom", scope.move);
-      function clickMap() {
-          var latlon = scope.projection.invert(d3.mouse(this));
-      }
- 
-
-      scope.g.call(zoom).on("click", clickMap);
-
+      scope.g = d3.select("#map");
 
       // Set up the world map once and only once
       d3.json('data/world-topo-min.json', function (error, world) {
@@ -157,8 +120,6 @@ angular.module('app.vis', [])
             scope.g.transition().duration(750).attr("transform", "");
         }
 
-
-
         function cclick(d) {
             if (active === d) return reset();
             scope.g.selectAll(".active").classed("active", false);
@@ -173,7 +134,7 @@ angular.module('app.vis', [])
 
 
         country.enter().insert('path')
-          .on("click", cclick)
+          //.on("click", cclick)
           /*.attr('d', scope.path)
           .attr('class', d.alpha2 + " COUNTRY_KNOWN country")
           .attr('id', function(d, i) { return d.id; });
@@ -500,24 +461,122 @@ angular.module('app.vis', [])
     };
   });
 
-function VisCtrl($scope, $window, $timeout, $filter, logFactory, modelSrvc, apiSrvc) {
+function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, modelSrvc, apiSrvc) {
     var width = document.getElementById('vis').offsetWidth;
     var height = width / 2;
 
-  var log = logFactory('VisCtrl'),
+    function redraw() {
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    }
+
+    var log = logFactory('VisCtrl'),
       model = modelSrvc.model,
-      projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
+      projection = d3.geo.mercator().translate([480, 300]).scale(970),
+      //projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
+    var color = d3.scale.category10();
+    var active;
+
+
+    var svg = d3.select("#vis").append("svg")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("resizeable", "1")
+    .call(d3.behavior.zoom().on("zoom", redraw))
+    .append("g");
+
+    function ttTmpl(alpha3) {
+        var alpha2 = 'US';
+        return '<div class="vis">'+
+            '<div class="header">'+ alpha3 +'</div>'+
+            '<div class="give-colored">{{ "NUSERS_ONLINE" | i18n:model.countries.'+alpha2+'.stats.gauges.userOnlineGiving || 0:true }} {{ "GIVING_ACCESS" | i18n }}</div>'+
+            '<div class="get-colored">{{ "NUSERS_ONLINE" | i18n:model.countries.'+alpha2+'.stats.gauges.userOnlineGetting || 0:true }} {{ "GETTING_ACCESS" | i18n }}</div>'+
+            '<div class="nusers {{ (!model.countries.'+alpha2+'.stats.gauges.userOnlineEver && !model.countries.'+alpha2+'.stats.counters.userOnlineEverOld) && \'gray\' || \'\' }}">'+
+            '{{ "NUSERS_EVER" | i18n:(model.countries.'+alpha2+'.stats.gauges.userOnlineEver + model.countries.'+alpha2+'.stats.gauges.userOnlineEverOld) }}'+
+            '</div>'+
+            '<div class="stats">'+
+            '<div class="bps{{ model.countries.'+alpha2+'.bps || 0 }}">'+
+            '{{ model.countries.'+alpha2+'.bps || 0 | prettyBps }} {{ "TRANSFERRING_NOW" | i18n }}'+
+            '</div>'+
+            '<div class="bytes{{ model.countries.'+alpha2+'.bytesEver || 0 }}">'+
+            '{{model.countries.'+alpha2+'.stats.counters.bytesGiven | prettyBytes}} {{"GIVEN" | i18n}}, ' +
+            '{{model.countries.'+alpha2+'.stats.counters.bytesGotten | prettyBytes}} {{"GOTTEN" | i18n}}' +
+            '</div>'+
+            '</div>'+
+            '</div>';
+    }
+
+
+    function reset() {
+        svg.selectAll(".active").classed("active", active = false);
+        svg.transition().duration(750).attr("transform", "");
+    }                             
+
+    function cclick(d) {
+        if (active === d) return reset();
+        svg.selectAll(".active").classed("active", false);
+        d3.select(this).classed("active", active = d);
+
+        var b = $scope.path.bounds(d);
+        svg.transition().duration(750).attr("transform",
+                                                "translate(" + $scope.projection.translate() + ")"
+                                                + "scale(" + .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height) + ")"
+                                                + "translate(" + -(b[1][0] + b[0][0]) / 2 + "," + -(b[1][1] + b[0][1]) / 2 + ")");
+    }
+
+
+    function ready(error, world, names, points) {
+
+        var countries = topojson.object(world, world.objects.countries).geometries,
+        neighbors = topojson.neighbors(world, countries),
+        i = -1,
+        n = countries.length;
+
+        countries.forEach(function(d) { 
+            var tryit = names.filter(function(n) { return d.id == n.id; })[0];
+            if (typeof tryit === "undefined"){
+                d.name = "Undefined";
+                console.log(d);
+            } else {
+                d.name = tryit.name; 
+            }
+        });
+
+        var country = svg.selectAll(".country").data(countries);
+
+
+        country
+        .enter()
+        .append("g")
+        .on("click", cclick)
+        .attr("id", "countries")
+        .append("path")
+        .attr("class", "country")    
+        .attr("title", function(d,i) { return d.name; })
+        //.attr("d", path)
+        .each(function(d) {
+            var el = d3.select(this);
+            el.attr('d', $scope.path).attr('stroke-opacity', 0);
+            el.attr('class', d.name + " COUNTRY_KNOWN country")
+            .attr('tooltip-placement', 'mouse')
+            //.attr('tooltip-trigger', 'click') // uncomment out to make it easier to inspect tooltips when debugging
+            .attr('tooltip-html-unsafe', ttTmpl(d.name));
+            $compile(this)($scope);
+        });
+
+
+    } 
+
+    queue()
+    .defer(d3.json, "data/world-50m.json")
+    .defer(d3.tsv, "data/world-country-names.tsv")
+    .defer(d3.json, "data/cities.json")
+    .await(ready);
+
 
   $scope.projection = projection;
   $scope.path = d3.geo.path().projection(projection);
-
-/*  $scope.path = function (d, pointRadius) {
-    path.pointRadius(pointRadius || DEFAULT_POINT_RADIUS);
-    // https://code.google.com/p/chromium/issues/detail?id=231626
-    return path(d) || 'M0 0';
-  };*/
 
   $scope.pathConnection = function (peer) {
     var MINIMUM_PEER_DISTANCE_FOR_NORMAL_ARCS = 30;

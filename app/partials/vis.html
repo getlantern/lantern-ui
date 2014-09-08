@@ -3,10 +3,10 @@
 <!--
   Only show yourself on the map if you've either managed to do a geoip lookup or have a stored geolocation.
 -->
-<div id="vis" ng-controller="VisCtrl">
-  <svg id="map" resizable>
+<div id="vis" ng-controller="VisCtrl" resizable>
+    <!--<svg id="map">-->
     <!--path id="globe" globe /-->
-    <g id="countries" countries />
+    <!--<g id="countries" countries />
     <g id="peers" peers></g>
     <path id="self" ng-show="model.location.resolved" self class="{{ model.settings.mode }}"
           ng-d="{{ path({type: 'Point', coordinates: [model.location.lon, model.location.lat]}, 5) }}"
@@ -44,5 +44,5 @@
     #self, .peer {
       filter: url(#defaultBlur)
     }
-  </style>
+  </style>-->
 </div>
