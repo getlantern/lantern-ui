@@ -1,0 +1,5 @@
+{"type":"FeatureCollection","cities":[
+{"type":"Feature","id":"01","geometry":{"type":"Point","coordinates":[9.85000,57.09700]},"properties":{"name":"Aalborg, Denmark"}},
+{"type":"Feature","id":"02","geometry":{"type":"Point","coordinates":[-70.60000,-23.43330]},"properties":{"name":"Antofagasta, Chile"}},
+{"type":"Feature","id":"04","geometry":{"type":"Point","coordinates":[-73.75030,42.65030]},"properties":{"name":"Albany, NY"}}
+]}
