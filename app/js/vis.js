@@ -549,7 +549,7 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
         country
         .enter()
         .append("g")
-        .on("click", cclick)
+        //.on("click", cclick)
         .attr("id", "countries")
         .append("path")
         .attr("class", "country")    
