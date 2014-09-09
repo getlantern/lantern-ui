@@ -455,11 +455,12 @@ angular.module('app.vis', [])
 
       var svg = d3.select("#vis").append("svg")
       .attr("width", "100%")
+      .attr("id", "map")
       .attr("height", "100%")
       .attr("resizeable", "1")
       .call(d3.behavior.zoom().scaleExtent([1,10]).on("zoom", redraw))
-      .append("g").attr("id", "countries").attr("countries", "");
-      svg.append("g").attr("id", "peers").attr("peers", "");
+      .append("g").attr("id", "countries").attr("countries", "")
+      .append("g").attr("id", "peers").attr("peers", "");
 
       function ttTmpl(alpha2) {
           return '<div class="vis">'+
