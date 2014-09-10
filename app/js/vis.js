@@ -445,22 +445,24 @@ angular.module('app.vis', [])
 
       var log = logFactory('VisCtrl'),
       model = modelSrvc.model,
-      //projection = d3.geo.mercator(),
+      //projection = d3.geo.mercator().scale(5),
       projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
       var color = d3.scale.category10();
       var active;
 
+      $scope.zoom = d3.behavior.zoom().scaleExtent([1,10]).on("zoom", redraw);
 
       var svg = d3.select("#vis").append("svg")
       .attr("width", "100%")
       .attr("id", "map")
       .attr("height", "100%")
       .attr("resizeable", "1")
-      .call(d3.behavior.zoom().scaleExtent([1,10]).on("zoom", redraw))
+      .call($scope.zoom)
       .append("g").attr("id", "countries").attr("countries", "")
       .append("g").attr("id", "peers").attr("peers", "");
+      d3.select("#map").append("filter").attr("id", "defaultBlur").append("feGaussianBlur").attr("stdDeviation", "1");
 
       function ttTmpl(alpha2) {
           return '<div class="vis">'+
@@ -540,7 +542,18 @@ angular.module('app.vis', [])
 
 
       $scope.projection = projection;
-      $scope.path = d3.geo.path().projection(projection);
+      var path = d3.geo.path().projection(projection);
+
+      $scope.path = function (d, pointRadius) {
+          var scale = $scope.zoom.scale();
+          if (scale < 3) {
+              scale = 3;
+          } else {
+            scale = Math.max(3.0/scale, 1.0);
+          }
+          path.pointRadius(pointRadius || scale);
+          return path(d) || 'M0 0';
+      };
 
       $scope.pathConnection = function (peer) {
 

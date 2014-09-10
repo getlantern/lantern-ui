@@ -7694,7 +7694,7 @@ body[dir=rtl] #latestDetails dd {
   fill-opacity: 0.2;
 }
 #countries path.censors {
-  fill-opacity: 0.3;
+  fill-opacity: 0.7;
 }
 #countries path.updating {
   fill-opacity: 0.1 !important;
