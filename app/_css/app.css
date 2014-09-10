@@ -7685,14 +7685,22 @@ body[dir=rtl] #latestDetails dd {
     stroke-width: 1px;
 }
 
-#counetries path {
+#countries path.COUNTRY_KNOWN {
+    stroke: #364d58;
+    stroke-width: 1px;
+    fill: black;
+    fill-opacity: 0.2;
+}
+
+#coeeuntries path {
   -webkit-transition: all 0.5s ease;
   transition: all 0.5s ease;
   stroke: #364d58;
   stroke-width: 1px;
   fill: black;
-  fill-opacity: 0.2;
+  fill-opacity: 0.5;
 }
+
 #countries path.censors {
   fill-opacity: 0.7;
 }
