@@ -545,11 +545,11 @@ angular.module('app.vis', [])
       var path = d3.geo.path().projection(projection);
 
       $scope.path = function (d, pointRadius) {
-          var scale = $scope.zoom.scale();
-          if (scale < 3) {
-              scale = 3;
+          var scale;
+          if ($scope.zoom.scale() < 3) {
+            scale = 3;
           } else {
-            scale = Math.max(3.0/scale, 1.0);
+            scale = Math.max(3.0/$scope.zoom.scale(), 1);
           }
           path.pointRadius(pointRadius || scale);
           return path(d) || 'M0 0';
