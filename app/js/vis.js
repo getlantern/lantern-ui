@@ -547,9 +547,9 @@ angular.module('app.vis', [])
       $scope.path = function (d, pointRadius) {
           var scale;
           if ($scope.zoom.scale() < 3) {
-            scale = 3;
+            scale = 2;       
           } else {
-            scale = Math.max(3.0/$scope.zoom.scale(), 1);
+            scale = Math.max(2.0/$scope.zoom.scale(), 0.5);
           }
           path.pointRadius(pointRadius || scale);
           return path(d) || 'M0 0';
