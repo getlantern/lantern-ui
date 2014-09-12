@@ -530,8 +530,6 @@ angular.module('app.vis', [])
               $compile(this)($scope);
           });
           var peers = angular.element( document.querySelector( '#peers' ) );
-          var countries = angular.element( document.querySelector('#countries'));
-          $compile(countries)($scope);
           $compile(peers)($scope);
       } 
 
