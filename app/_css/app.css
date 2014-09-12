@@ -7757,7 +7757,7 @@ path.peer.cloud, path.peer.laeproxy {
 
 path.connection {
   fill: none !important;
-  stroke-width: 1px !important;
+  stroke-width: 0.5px !important;
   stroke: white !important;
   -webkit-transition: stroke-opacity 0.5s ease;
   transition: stroke-opacity 0.5s ease;
