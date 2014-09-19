@@ -184,7 +184,7 @@ angular.module('app.vis', [])
       }, true);
     };
   })
-  .directive('peers', function ($compile, $filter) {
+  .directive('peers', function ($compile, $filter, $timeout) {
     var noNullIsland = $filter('noNullIsland');
     return function (scope, element) {
       // Template for our peer tooltips
@@ -297,14 +297,18 @@ angular.module('app.vis', [])
           .attr("tooltip-placement", "mouse")
           .attr("tooltip-html-unsafe", peerTooltipTemplate)
           .each(function(peer) {
-            // Compile the tooltip target dom element to enable the tooltip-html-unsafe directive
-            var childScope = scope.$new();
-            childScope.peer = peer;
             // Format the ip for display
             if (model.dev && peer.ip) {
               peer.formattedIp = " (" + peer.ip + ")";
             }
-            $compile(this)(childScope);
+            /* add timeout delay to prevent webview issues */
+            var that = this;
+            $timeout(function() {
+                // Compile the tooltip target dom element to enable the tooltip-html-unsafe directive
+                var childScope = scope.$new();
+                childScope.peer = peer;
+                $compile(that)(childScope);
+            }, 100);
           });
         
         // Create points and hover areas for each peer
@@ -313,8 +317,6 @@ angular.module('app.vis', [])
         
         // Configure points and hover areas on each update
         allPeers.select("g.peer path.peer")
-        .style("opacity", 1.0)
-        .style("fill-opacity", 1.0)
         .attr("d", function(peer) {
           return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]})
         }).attr("class", function(peer) {
@@ -447,7 +449,9 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
       $scope.svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
   }
 
-  $scope.zoom = d3.behavior.zoom().scaleExtent([1,10]).on("zoom", 
+  $scope.zoom = d3.behavior.zoom().translate([0, 0])
+                .scale(1)
+                .scaleExtent([1,10]).on("zoom", 
                 $scope.redraw);
 
   $scope.svg = d3.select("#vis").append("svg")
@@ -471,7 +475,8 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
       } else {
           scale = Math.max(2.0/$scope.zoom.scale(), 0.5);
       }
-      path.pointRadius(pointRadius || scale);
+      path.pointRadius(scale);
+      //path.pointRadius(pointRadius || scale);
       return path(d) || 'M0 0';
   };
 

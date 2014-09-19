@@ -7678,6 +7678,10 @@ body[dir=rtl] #latestDetails dd {
   fill: rgba(6, 21, 50, 0.1);
 }
 
+#countries path {
+    fill-opacity: 0.2;
+}
+
 #countries path.COUNTRY_KNOWN {
   stroke: #364d58;
   fill-opacity: 0.2;
