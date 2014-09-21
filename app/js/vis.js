@@ -438,8 +438,8 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
       width = document.getElementById('vis').offsetWidth,
       height = width / 2,
       model = modelSrvc.model,
-      //projection = d3.geo.mercator(),
-      projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
+      projection = d3.geo.mercator(),
+      //projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
 
@@ -462,7 +462,13 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
   .call($scope.zoom)
   .append("g").attr("id", "countries").attr("countries", "")
   .append("g").attr("id", "peers").attr("peers", "");
-  $scope.svg.append("filter").attr("id", "defaultBlur").append("feGaussianBlur").attr("stdDeviation", "1");
+  d3.select("#map").append("filter").attr("id", "defaultblur")
+  .append("feGaussianBlur")
+  .attr("id", "feBlur")    
+  .attr("stdDeviation", "1")
+  .attr("result", "blurOut")
+  .attr("in", "matrixOut")
+  .attr("in", "SourceGraphic");
 
   var countries = angular.element( document.querySelector( '#countries' ) );
   $compile(countries)($scope);
@@ -470,13 +476,18 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
 
   $scope.path = function (d, pointRadius) {
       var scale;
-      if ($scope.zoom.scale() < 3) {
+     if ($scope.zoom.scale() < 3) {
           scale = 2;       
       } else {
-          scale = Math.max(2.0/$scope.zoom.scale(), 0.5);
+          scale = Math.max(2.0/$scope.zoom.scale(), 1.0);
       }
-      path.pointRadius(scale);
-      //path.pointRadius(pointRadius || scale);
+      var blur = d3.select('#feBlur');
+      if (blur) {
+        var updatedBlur = Math.max(0.3, 1.0/$scope.zoom.scale());
+        blur.attr("stdDeviation", updatedBlur);
+      }
+      //path.pointRadius(scale);
+      path.pointRadius(pointRadius || scale);
       return path(d) || 'M0 0';
   };
 

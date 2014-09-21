@@ -7678,10 +7678,6 @@ body[dir=rtl] #latestDetails dd {
   fill: rgba(6, 21, 50, 0.1);
 }
 
-#countries path {
-    fill-opacity: 0.2;
-}
-
 #countries path.COUNTRY_KNOWN {
   stroke: #364d58;
   fill-opacity: 0.2;
@@ -7705,7 +7701,9 @@ path.peer {
 }
 
 g.peer path.peer {
-  opacity: 0.4;
+  fill-opacity: 1;
+  filter: url(#defaultblur);
+  stroke-opacity: 0;
 }
 g.peer:hover path.peer {
   opacity: 1;
@@ -7713,6 +7711,7 @@ g.peer:hover path.peer {
 
 path.peer-hover-area {
   opacity: 0;
+  fill-opacity: 0;
 }
 
 path.peer.connected {
