@@ -111,6 +111,7 @@ angular.module('app.vis', [])
             var el = d3.select(this);
             el.attr('d', scope.path).attr('stroke-opacity', 0);
             el.attr('class', 'COUNTRY_KNOWN');
+            el.style('fill-opacity', 0.2);
             if (d.alpha2) {
               el.attr('class', d.alpha2 + " COUNTRY_KNOWN")
                 .attr('tooltip-placement', 'mouse')
