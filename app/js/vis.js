@@ -96,6 +96,35 @@ angular.module('app.vis', [])
         }
       });
 
+      scope.g = d3.select(element[0]).append("g");
+
+      scope.move = function() {
+          var width = document.getElementById('vis').offsetWidth;
+          var height = width / 2;
+
+          var t = d3.event.translate;
+          var s = d3.event.scale; 
+          var h = height/4;
+
+
+          t[0] = Math.min(
+              (width/height)  * (s - 1), 
+              Math.max( width * (1 - s), t[0] )
+          );
+
+          t[1] = Math.min(
+              h * (s - 1) + h * s, 
+              Math.max(height  * (1 - s) - h * s, t[1])
+          );
+
+          zoom.translate(t);
+          scope.g.attr("transform", "translate(" + t + ")scale(" + s + ")");
+
+          //adjust the country hover stroke width based on zoom level
+          d3.selectAll(".country").style("stroke-width", 1.5 / s);
+      };
+
+
       // Set up the world map once and only once
       d3.json('data/world.topojson', function (error, world) {
         if (error) throw error;
@@ -113,7 +142,7 @@ angular.module('app.vis', [])
             el.attr('class', 'COUNTRY_KNOWN');
             el.style('fill-opacity', 0.2);
             if (d.alpha2) {
-              el.attr('class', d.alpha2 + " COUNTRY_KNOWN")
+              el.attr('class', d.alpha2 + " COUNTRY_KNOWN country")
                 .attr('tooltip-placement', 'mouse')
                 //.attr('tooltip-trigger', 'click') // uncomment out to make it easier to inspect tooltips when debugging
                 .attr('tooltip-html-unsafe', ttTmpl(d.alpha2));
@@ -269,6 +298,7 @@ angular.module('app.vis', [])
        *   peer
        * 
        */
+
       function renderPeers(peers, oldPeers) {
         if (!peers) return;
 
@@ -321,11 +351,11 @@ angular.module('app.vis', [])
         .attr("d", function(peer) {
           return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]})
         }).attr("class", function(peer) {
-          var result = "peer " + peer.mode + " " + peer.type;
-          if (peer.connected) {
-            result += " connected";
-          }
-          return result;
+            var result = "peer " + peer.mode + " " + peer.type;
+            if (peer.connected) {
+                result += " connected";
+            }
+            return result;
         });
 
         // Configure hover areas for all peers
@@ -338,13 +368,13 @@ angular.module('app.vis', [])
         newPeers.append("path")
           .classed("connection", true)
           .attr("id", function(peer) { return "connection_to_" + peerIdentifier(peer); });
-        
+          
         // Set paths for arcs for all peers
         allPeers.select("path.connection")
           .attr("d", scope.pathConnection)
           .attr("stroke-opacity", function(peer) {
             return connectionOpacityScale(peer.bpsUpDn || 0);
-          });
+        });
         
         // Animate connected/disconnected peers
         var newlyConnectedPeersSelector = "";
@@ -439,8 +469,8 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
       width = document.getElementById('vis').offsetWidth,
       height = width / 2,
       model = modelSrvc.model,
-      projection = d3.geo.mercator(),
-      //projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
+      //projection = d3.geo.mercator(),
+      projection = d3.geo.mercator().translate([(width/2), (height/2)]).scale( width / 2 / Math.PI),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
 
@@ -452,7 +482,7 @@ function VisCtrl($scope, $compile, $window, $timeout, $filter, logFactory, model
 
   $scope.zoom = d3.behavior.zoom().translate([0, 0])
                 .scale(1)
-                .scaleExtent([1,10]).on("zoom", 
+                .scaleExtent([1,8]).on("zoom", 
                 $scope.redraw);
 
   $scope.svg = d3.select("#vis").append("svg")
