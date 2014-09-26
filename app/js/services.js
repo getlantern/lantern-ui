@@ -178,7 +178,6 @@ angular.module('app.services', [])
       }
       try {
         $rootScope.$apply(function() {
-          var shouldUpdateInstanceStats = false;
           if (patch[0].path === '') {
             // XXX jsonpatch can't mutate root object https://github.com/dharmafly/jsonpatch.js/issues/10
             angular.copy(patch[0].value, model);
@@ -187,7 +186,10 @@ angular.module('app.services', [])
               applyPatch(model, patch);
               for (var i=0; i<patch.length; i++) {
                 if (patch[i].path == "/instanceStats") {
-                  shouldUpdateInstanceStats = true;
+                  // Remember the rate we got from the update as the "lanternRate".
+                  // This is later summed with the flashlight rate to update
+                  // the total rate.
+                  patch[0].value.allBytes.lanternRate = patch[0].value.allBytes.rate;
                   break;
                 }
               }
@@ -197,7 +199,7 @@ angular.module('app.services', [])
               apiSrvc.exception({exception: e, patch: patch});
             }
           }
-          flashlightStats.updateModel(model, shouldUpdateInstanceStats);
+          flashlightStats.updateModel(model);
         });
       } catch (e) {
         // XXX https://github.com/angular/angular.js/issues/2602
@@ -303,8 +305,9 @@ angular.module('app.services', [])
     
     // updateModel updates a model that doesn't include flashlight peers with
     // information about the flashlight peers, including updating aggregated
-    // figure slike total bps.
-    function updateModel(model, shouldUpdateInstanceStats) {
+    // figures like total bps.
+    function updateModel(model) {
+      var flashlightRate = 0;
       for (var peerid in flashlightPeers) {
         var peer = flashlightPeers[peerid];
         
@@ -317,11 +320,14 @@ angular.module('app.services', [])
         // Add peer to model
         model.peers.push(peer);
         
-        if (shouldUpdateInstanceStats) {
-          // Update total bytes up/dn
-          model.instanceStats.allBytes.rate += peer.bpsUpDn;
+        if (peer.bpsUpDn) {
+          flashlightRate += peer.bpsUpDn;
         }
       }
+      
+      // Total rate is lanternRate + flashlightRate
+      model.instanceStats.allBytes.rate =
+        model.instanceStats.allBytes.lanternRate + flashlightRate;
     }
     
     return {
