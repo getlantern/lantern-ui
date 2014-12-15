@@ -184,15 +184,6 @@ angular.module('app.services', [])
           } else {
             try {
               applyPatch(model, patch);
-              for (var i=0; i<patch.length; i++) {
-                if (patch[i].path == "/instanceStats") {
-                  // Remember the rate we got from the update as the "lanternRate".
-                  // This is later summed with the flashlight rate to update
-                  // the total rate.
-                  patch[0].value.allBytes.lanternRate = patch[0].value.allBytes.rate;
-                  break;
-                }
-              }
             } catch (e) {
               if (!(e instanceof PatchApplyError || e instanceof InvalidPatch)) throw e;
               log.error('Error applying patch', patch);
@@ -281,26 +272,34 @@ angular.module('app.services', [])
     // model.
     var flashlightPeers = {};
 
-    // connect() starts listening for peer updates
-    function connect() {
-      var source = new EventSource('http://127.0.0.1:15670/');
+    function connectTo(url, type) {
+      var source = new EventSource(url);
       source.addEventListener('message', function(e) {
         var data = JSON.parse(e.data);
         if (data.type == "peer") {
           var peer = data.data;
+          peer.type = type;
           flashlightPeers[peer.peerid] = peer;
         }
       }, false);
   
       source.addEventListener('open', function(e) {
-        $log.debug("flashlight connection opened");
+        $log.debug("flashlight connection opened to " + url);
       }, false);
   
       source.addEventListener('error', function(e) {
         if (e.readyState == EventSource.CLOSED) {
-          $log.debug("flashlight connection closed");
+          $log.debug("flashlight connection closed to " + url);
         }
       }, false);
+    }
+    
+    // connect() starts listening for peer updates
+    function connect() {
+      // TODO: eventually, the client will include other types of peers - need
+      // to set the type from the flashlight side.
+      connectTo('http://127.0.0.1:15670/', "cloud"); // flashlight client
+      connectTo('http://127.0.0.1:15671/', "pc"); // flashlight server
     }
     
     // updateModel updates a model that doesn't include flashlight peers with
@@ -308,6 +307,12 @@ angular.module('app.services', [])
     // figures like total bps.
     function updateModel(model) {
       var flashlightRate = 0;
+      var existingPeers = {};
+      for (var i=0; i<model.peers.length; i++) {
+        var peer = model.peers[i];
+        existingPeers[peer.peerid] = peer;
+      }
+      
       for (var peerid in flashlightPeers) {
         var peer = flashlightPeers[peerid];
         
@@ -317,17 +322,21 @@ angular.module('app.services', [])
         var delta = new Date().getTime() - Date.parse(peer.lastConnected);
         peer.connected = delta < 30000;
         
-        // Add peer to model
-        model.peers.push(peer);
+        // Add/update peer in model
+        var existingPeer = existingPeers[peerid];
+        if (!existingPeer) {
+          model.peers.push(angular.copy(peer));
+        } else {
+          angular.copy(peer, existingPeer);
+        }
         
         if (peer.bpsUpDn) {
           flashlightRate += peer.bpsUpDn;
         }
       }
       
-      // Total rate is lanternRate + flashlightRate
-      model.instanceStats.allBytes.rate =
-        model.instanceStats.allBytes.lanternRate + flashlightRate;
+      // Total rate is flashlightRate
+      model.instanceStats.allBytes.rate = flashlightRate;
     }
     
     return {
