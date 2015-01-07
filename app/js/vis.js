@@ -529,7 +529,7 @@ app.controller('VisCtrl', ['$scope', '$rootScope', '$compile', '$window', '$time
       var width = map.offsetWidth;
       var height = map.offsetHeight;
 
-      /* multiple values in our translation matrix
+      /* multiply values in our translation matrix
        * by the scaling factor
        */
       for (var i=0; i< $scope.transMatrix.length; i++)
