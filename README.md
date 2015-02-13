@@ -80,7 +80,7 @@ config file (`config/compass.rb`):
 Lantern UI uses [Gulp](http://gulpjs.com/) to build assets
 
 * `npm install --global gulp`
-
+* `npm install`
 * `gulp build`
 
 Embed 'dest' folder into production.
