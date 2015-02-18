@@ -1,93 +1,4 @@
 @font-face {
-  font-family: "Droid Sans Mono";
-  src: url('../font/DroidSansMono.ttf');
-}
-
-@font-face {
-  font-family: "Roboto Thin";
-  src: url('../font/Roboto-Thin.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Roboto Thin";
-  src: url('../font/Roboto-ThinItalic.ttf');
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Roboto Light";
-  src: url('../font/Roboto-Light.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Roboto Light";
-  src: url('../font/Roboto-LightItalic.ttf');
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Roboto";
-  src: url('../font/Roboto-Regular.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Roboto";
-  src: url('../font/Roboto-Italic.ttf');
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Roboto";
-  src: url('../font/Roboto-Bold.ttf');
-  font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Roboto";
-  src: url('../font/Roboto-BoldItalic.ttf');
-  font-weight: bold;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Roboto Medium";
-  src: url('../font/Roboto-Medium.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Roboto Medium";
-  src: url('../font/Roboto-MediumItalic.ttf');
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: "Roboto Black";
-  src: url('../font/Roboto-Black.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Roboto Black";
-  src: url('../font/Roboto-BlackItalic.ttf');
-  font-weight: normal;
-  font-style: italic;
-}
-
-@font-face {
   font-family: "LigatureSymbols";
   src: url('../font/LigatureSymbols-2.11.woff') format('woff'), url('../font/LigatureSymbols-2.11.eot') format('embedded-opentype'), url('../font/LigatureSymbols-2.11.ttf') format('truetype'), url('../font/LigatureSymbols-2.11.svg') format('svg');
   font-weight: normal;
@@ -330,7 +241,7 @@ textarea {
 }
 body {
   margin: 0;
-  font-family: Roboto;
+  font-family: Helvetica Bold;
   font-size: 14px;
   line-height: 18px;
   color: #333333;
@@ -979,7 +890,7 @@ address {
 code,
 pre {
   padding: 0 3px 2px;
-  font-family: "Droid Sans Mono";
+  font-family: "Andale Mono";
   font-size: 12px;
   color: #333333;
   -webkit-border-radius: 3px;
@@ -1069,7 +980,7 @@ input,
 button,
 select,
 textarea {
-  font-family: Roboto;
+  font-family: Helvetica Bold;
 }
 
 label {
@@ -6626,11 +6537,11 @@ body[dir=rtl] .indented {
 }
 
 .thin {
-  font-family: "Roboto Thin";
+  font-family: "Helvetica Light";
 }
 
 .light {
-  font-family: "Roboto Light";
+  font-family: "Helvetica";
 }
 
 .bold {
@@ -6638,11 +6549,11 @@ body[dir=rtl] .indented {
 }
 
 .bolder {
-  font-family: "Roboto Medium";
+  font-family: "Helvetica Bold";
 }
 
 .boldest {
-  font-family: "Roboto Black";
+  font-family: "Helvetica Bold";
 }
 
 .tooltip {
@@ -6883,7 +6794,7 @@ textarea {
 }
 textarea.report, textarea.diagnosticInfo {
   font-size: 11.9px;
-  font-family: "Droid Sans Mono";
+  font-family: "Andale Mono";
   width: 100%;
 }
 textarea.report {
@@ -7109,7 +7020,7 @@ body[dir=rtl] .control-extra {
 
 #welcome {
   text-align: center;
-  font-family: "Roboto Thin";
+  font-family: "Helvetica Light";
   background-color: rgba(0, 0, 0, 0.3);
   color: white;
   font-size: 17.5px;
@@ -7131,7 +7042,7 @@ body[dir=rtl] .control-extra {
   -webkit-animation-iteration-count: infinite;
   -webkit-animation-timing-function: linear;
   color: #fff343;
-  font-family: "Roboto Light";
+  font-family: "Helvetica";
   font-size: 14px;
   padding-top: 12px;
 }
@@ -7169,7 +7080,7 @@ body[dir=rtl] .control-extra {
 #proxiedSites textarea {
   width: 100%;
   height: 150px;
-  font-family: "Droid Sans Mono";
+  font-family: "Andale Mono";
   font-size: 13px;
 }
 #proxiedSites .error {
@@ -7470,7 +7381,7 @@ body.giveMode #friendlist .coloredByConnectedStatus.connected .friendConnectedSt
 }
 #friendlist .friendConnectedStatus, #friendlist .reason {
   font-size: 11.9px;
-  font-family: "Roboto Thin";
+  font-family: "Helvetica Light";
   max-width: 340px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7623,7 +7534,7 @@ body[dir=rtl] #latestDetails dd {
   margin: 5px 25px 20px;
 }
 #about textarea {
-  font-family: "Roboto Light";
+  font-family: "Helvetica";
   font-size: 11.9px;
   width: 100%;
 }
@@ -8071,7 +7982,7 @@ body.giveMode #npending {
   -moz-border-radius: 5px;
   border-radius: 5px;
   font-size: 11.9px;
-  font-family: "Droid Sans Mono";
+  font-family: "Andale Mono";
   width: 500px;
   height: 500px;
   overflow: auto;
