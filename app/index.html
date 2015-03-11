@@ -2,7 +2,7 @@
 <html ng-app="app">
   <head>
     <meta charset="utf-8">
-    <title ng-bind-template="{{ 'LANTERN' | i18n }}">Lantern</title>
+    <title>{{ 'LANTERN' | translate }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Lantern">
     <meta name="author" content="Team Lantern">
@@ -10,45 +10,47 @@
     <!-- uncomment this to use firebug lite
     <script src="http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js"></script>
     -->
-
+    <!-- build:css style/app.css -->
     <link href="bower_components/select2/select2.css" rel="stylesheet">
     <link href="_css/app.css" rel="stylesheet">
+    <link href="bower_components/normalize.css/normalize.css" rel="stylesheet">
+    <!-- endbuild -->
 
+    <!-- build:js js/lib.js -->
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/jsonpatch/lib/jsonpatch.js"></script>
-    <script src="bower_components/jquery/jquery.js"></script>
-    <script src="bower_components/cometd-js-jquery/org/cometd.js"></script>
-    <script src="bower_components/cometd-js-jquery/jquery/jquery.cometd.js"></script>
+    <script src="bower_components/d3/d3.min.js"></script>
+    <script src="bower_components/lodash/lodash.min.js"></script>
+    <script src="bower_components/select2/select2.js"></script>
+    <script src="bower_components/cssesc/cssesc.js"></script>
+
     <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-translate/angular-translate.min.js"></script>
+    <script src="bower_components/angular-translate-loader-static-files/angular-translate-loader-static-files.min.js"></script>
     <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.min.js"></script>
+    <script src="bower_components/angular-ui-utils/ui-utils.min.js"></script>
+    <script src="bower_components/angular-websocket/angular-websocket.min.js"></script>
+    <script src="bower_components/angular-local-storage/dist/angular-local-storage.min.js"></script>
+    <script src="lib/angular-ui-bootstrap-tpls.js"></script>
 
     <!-- we host a copy of google's analytics.js locally -->
     <script src="lib/analytics.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/event/event.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/if/if.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/showhide/showhide.js"></script>
-    <script src="bower_components/angular-ui-utils/modules/validate/validate.js"></script>
-    <!-- XXX using our own build of ui-bootstrap with custom patches -->
-    <!--script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script-->
-    <script src="lib/ui-bootstrap-tpls-0.5.0-SNAPSHOT.js"></script>
-    <script src="bower_components/lodash/dist/lodash.js"></script>
-    <script src="bower_components/select2/select2.js"></script>
-    <script src="bower_components/angular-ui-select2/src/select2.js"></script>
-    <script src="bower_components/d3/d3.js"></script>
-    <script src="bower_components/cssesc/cssesc.js"></script>
+    <!--<script src="bower_components/ui-bootstrap/src/tooltip/tooltip.js"></script>-->
     <!-- XXX see "XXX" in js/vis.js before switching to more recent topojson -->
-    <!-- <script src="bower_components/topojson/topojson.js"></script> -->
     <script src="lib/topojson.js"></script>
+    <!-- endbuild -->
 
-    <script src="js/version.js"></script>
+    <!-- build:js2 js/app.js -->
     <script src="js/app.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/helpers.js"></script>
-    <script src="js/i18n.js"></script>
     <script src="js/filters.js"></script>
     <script src="js/services.js"></script>
     <script src="js/controllers.js"></script>
     <script src="js/directives.js"></script>
     <script src="js/vis.js"></script>
+    <!-- endbuild -->
 
     <link rel="shortcut icon" href="img/favicon.ico">
     <link rel="icon" type="image/png" href="img/favicon.png">
@@ -56,39 +58,42 @@
 
   <body ng-controller="RootCtrl" ng-cloak lang="{{ lang }}" dir="{{ langDirection }}"
     ng-class="{showVis: model.showVis, getMode: inGetMode, giveMode: inGiveMode}">
+    <div id="fb-root"></div>
+    <div id="welcomescreen" ng-show="wsConnected && currentModal == 'welcome'" modal="show" class="modal" ng-cloak>
+        <div class="modal-header">
+            <h3>
+                {{ 'WELCOME_TO_LANTERN' | translate }}
+            </h3>
+        </div>
+        <div class="modal-body">
+            <p class="now_access">
+            {{ 'NOW_ACCESS' | translate }}
+            </p>
+            <p class="logos">
+            <a href="https://facebook.com" target="_blank"><img src="../img/fb.png"></a>
+            <a href="https://twitter.com" target="_blank"><img src="../img/twitter.png"></a>
+            </p>
+            <p class="share_section">
+            <div class="fb-share-button" style="padding-left:35px; top:-7px;" data-href="https://getlantern.org" data-layout="button_count"></div>
+            <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://getlantern.org" 
+                data-text="I'm using Lantern -- an app for defeating Internet censorship" data-via="getlantern">Tweet</a>
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button id="continueFromWelcome" 
+                type="button" class="btn btn-primary" 
+                ng-click="closeModal()">{{ 'CONTINUE' | translate }}</button>
+        </div>
+    </div>
 
-    <script type="text/javascript">
-      if ((/trident/i).test(navigator.userAgent)) {
-        document.write(
-          '<div id="ie-warning">' +
-          '  Unsupported browser.' +
-          '  <a href="https://chrome.google.com">Chrome</a> or' +
-          '  <a href="https://www.mozilla.org/firefox/">Firefox</a>' +
-          '  is recommended.' +
-          '</div>'
-        );
-        $(document.body).removeAttr('ng-cloak');
-      }
-    </script>
-
-    <div id="waiting" ng-show="!cometdConnected">
+    <div id="waiting" ng-show="!wsConnected">
       <div ng-show="!backendIsGone">
-        <div>{{ 'WAITING_FOR_LANTERN' | i18n }}</div>
+        <div>{{ 'WAITING_FOR_LANTERN' | translate }}</div>
         <img src="img/spinner.gif">
       </div>
       <div ng-show="backendIsGone">
-        <div>{{ 'LANTERN_GONE' | i18n }}</div>
-        <button type="button" class="btn btn-primary" onclick="window.close();">{{ 'CLOSE_WINDOW' | i18n }}</button>
-      </div>
-    </div>
-
-    <div id="alerts">
-      <div ng-repeat="(id, notification) in model.notifications" ng-hide="notification.background && (model.modal && model.modal != 'none')">
-        <alert ui-animate
-               type="notification.type"
-               close="interaction(INTERACTION.close, {notification: id})">
-          <span dynamic="notification.message"></span>
-        </alert>
+        <div>{{ 'LANTERN_GONE' | translate }}</div>
+        <button type="button" class="btn btn-primary" onclick="window.close();">{{ 'CLOSE_WINDOW' | translate }}</button>
       </div>
     </div>
     <div ng-include src="'partials/topbar.html'"></div>

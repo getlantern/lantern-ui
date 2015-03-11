@@ -2,19 +2,21 @@
 
 var app = angular.module('app', [
   'app.constants',
+  'ngWebSocket',
+  'LocalStorageModule',
   'app.helpers',
-  'app.i18n',
+  'pascalprecht.translate',
   'app.filters',
   'app.services',
   'app.directives',
   'app.vis',
   'ngSanitize',
-  'ui.event',
-  'ui.if',
+  'ngResource',
+  'ui.utils',
   'ui.showhide',
-  'ui.select2',
   'ui.validate',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'ui.bootstrap.tpls'
   ])
   .directive('dynamic', function ($compile) {
     return {
@@ -28,16 +30,18 @@ var app = angular.module('app', [
       }
     };
   })
-  // angular ui bootstrap config
-  .config(function($dialogProvider) {
-    $dialogProvider.options({
-      backdrop: false,
-      dialogFade: true,
-      keyboard: false,
-      backdropClick: false
-    });
-  })
-  .config(function($tooltipProvider) {
+  .config(function($tooltipProvider, $httpProvider,
+                   $resourceProvider, $translateProvider, DEFAULT_LANG) {
+
+      $translateProvider.preferredLanguage(DEFAULT_LANG);
+
+      $translateProvider.useStaticFilesLoader({
+          prefix: './locale/',
+          suffix: '.json'
+      });
+    $httpProvider.defaults.useXDomain = true;
+    delete $httpProvider.defaults.headers.common["X-Requested-With"];
+    //$httpProvider.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
     $tooltipProvider.options({
       appendToBody: true
     });
@@ -46,10 +50,108 @@ var app = angular.module('app', [
   .value('ui.config', {
     animate: 'ui-hide',
   })
-  .run(function ($filter, $log, $rootScope, $timeout, $window, apiSrvc, gaMgr, modelSrvc, ENUMS, EXTERNAL_URL, LANTERNUI_VER, MODAL, CONTACT_FORM_MAXLEN) {
+  // split array displays separates an array inside a textarea with newlines
+  .directive('splitArray', function() {
+      return {
+          restrict: 'A',
+          require: 'ngModel',
+          link: function(scope, element, attr, ngModel) {
+
+              function fromUser(text) {
+                  return text.split("\n");
+              }
+
+              function toUser(array) {
+                  if (array) {
+                    return array.join("\n");
+                  }
+              }
+
+              ngModel.$parsers.push(fromUser);
+              ngModel.$formatters.push(toUser);
+          }
+      };
+  })
+  .factory('DataStream', [
+    '$websocket',
+    '$rootScope',
+    '$interval',
+    '$window',
+    'Messages',
+    function($websocket, $rootScope, $interval, $window, Messages) {
+
+      var WS_RECONNECT_INTERVAL = 5000;
+      var WS_RETRY_COUNT        = 0;
+
+      var ds = $websocket('ws://' + document.location.host + '/data');
+
+      ds.onMessage(function(raw) {
+        var envelope = JSON.parse(raw.data);
+        if (typeof Messages[envelope.Type] != 'undefined') {
+          Messages[envelope.Type].call(this, envelope.Message);
+        } else {
+          console.log('Got unknown message type: ' + envelope.Type);
+        };
+      });
+
+      ds.onOpen(function(msg) {
+        $rootScope.wsConnected = true;
+        WS_RETRY_COUNT = 0;
+        $rootScope.backendIsGone = false;
+        $rootScope.wsLastConnectedAt = new Date();
+        console.log("New websocket instance created " + msg);
+      });
+
+      ds.onClose(function(msg) {
+        $rootScope.wsConnected = false;
+        // try to reconnect indefinitely
+        // when the websocket closes
+        $interval(function() {
+          console.log("Trying to reconnect to disconnected websocket");
+          ds = $websocket('ws://' + document.location.host + '/data');
+          ds.onOpen(function(msg) {
+            $window.location.reload();
+          });
+        }, WS_RECONNECT_INTERVAL);
+        console.log("This websocket instance closed " + msg);
+      });
+
+      ds.onError(function(msg) {
+          console.log("Error on this websocket instance " + msg);
+      });
+
+      var methods = {
+        'send': function(messageType, data) {
+          console.log('request to send.');
+          ds.send(JSON.stringify({'Type': messageType, 'Message': data}))
+        }
+      };
+
+      return methods;
+    }
+  ])
+  .factory('ProxiedSites', ['$window', '$rootScope', 'DataStream', function($window, $rootScope, DataStream) {
+
+      var methods = {
+        update: function() {
+          console.log('UPDATE');
+          // dataStream.send(JSON.stringify($rootScope.updates));
+          DataStream.send('ProxiedSites', $rootScope.updates)
+        },
+        get: function() {
+          console.log('GET');
+          // dataStream.send(JSON.stringify({ action: 'get' }));
+          DataStream.send('ProxiedSites', {'action': 'get'});
+        }
+      };
+
+      return methods;
+  }])
+  .run(function ($filter, $log, $rootScope, $timeout, $window, $websocket,
+                 $translate, $http, apiSrvc, gaMgr, modelSrvc, ENUMS, EXTERNAL_URL, MODAL, CONTACT_FORM_MAXLEN) {
+
     var CONNECTIVITY = ENUMS.CONNECTIVITY,
         MODE = ENUMS.MODE,
-        i18nFltr = $filter('i18n'),
         jsonFltr = $filter('json'),
         model = modelSrvc.model,
         prettyUserFltr = $filter('prettyUser'),
@@ -60,7 +162,7 @@ var app = angular.module('app', [
     $window.model = model;
 
     $rootScope.EXTERNAL_URL = EXTERNAL_URL;
-    $rootScope.lanternUiVersion = LANTERNUI_VER.join('.');
+
     $rootScope.model = model;
     $rootScope.DEFAULT_AVATAR_URL = 'img/default-avatar.png';
     $rootScope.CONTACT_FORM_MAXLEN = CONTACT_FORM_MAXLEN;
@@ -69,121 +171,13 @@ var app = angular.module('app', [
       $rootScope[key] = val;
     });
 
-    $rootScope.$watch('model.settings.autoReport', function (autoReport, autoReportOld) {
-      if (!model.setupComplete) return;
-      if (!autoReport && autoReportOld) {
-        gaMgr.stopTracking();
-      } else if (autoReport && !autoReportOld) {
-        gaMgr.startTracking();
-      }
-    });
-
-    $rootScope.$watch('model.modal', function (modal, modalOld) {
-      if (!model.setupComplete || !model.settings.autoReport || angular.isUndefined(modalOld)) {
-        return;
-      }
-      gaMgr.trackPageView('start');
-    });
-
-    $rootScope.$watch('model.notifications', function (notifications) {
-      _.each(notifications, function(notification, id) {
-        if (notification.autoClose) {
-          $timeout(function() {
-            $rootScope.interaction(INTERACTION.close, {notification: id, auto: true});
-          }, notification.autoClose * 1000);
-        }
-      });
-    }, true);
-
-    $rootScope.$watch('model.settings.mode', function (mode) {
-      $rootScope.inGiveMode = mode === MODE.give;
-      $rootScope.inGetMode = mode === MODE.get;
-    });
-
-    $rootScope.$watch('model.mock', function (mock) {
-      $rootScope.mockBackend = !!mock;
-    });
-
-    $rootScope.$watch('model.location.country', function (country) {
-      if (country && model.countries[country]) {
-        $rootScope.inCensoringCountry = model.countries[country].censors;
-      }
-    });
-
-    $rootScope.$watch('model.globalStats', function (stats) {
-      $rootScope.statsLoaded = !!stats && !_.isEmpty(stats.gauges);
-    });
-
-    $rootScope.$watch('model.roster', function (roster) {
-      if (!roster) return;
-      updateContactCompletions();
-    }, true);
-
-    $rootScope.$watch('model.friends', function (friends) {
-      if (!friends) return;
-      $rootScope.nfriends = 0;
-      $rootScope.nfriendSuggestions = 0;
-      $rootScope.friendSuggestions = [];
-      $rootScope.friendsByEmail = {};
-      for (var i=0, l=friends.length, ii=friends[i]; ii; ii=friends[++i]) {
-        $rootScope.friendsByEmail[ii.email] = ii;
-        if (ii.status === FRIEND_STATUS.pending) {
-          if (model.remainingFriendingQuota || ii.freeToFriend) {
-            $rootScope.nfriendSuggestions++;
-            $rootScope.friendSuggestions.push(ii);
-          }
-        } else if (ii.status == FRIEND_STATUS.friend) {
-          $rootScope.nfriends++;
-        }
-      }
-      updateContactCompletions();
-    }, true);
-    
-    function updateContactCompletions() {
-      var roster = model.roster;
-      if (!roster) return;
-      var completions = {};
-      _.each(model.friends, function (friend) {
-        if (friend.status !== FRIEND_STATUS.friend) {
-          completions[friend.email] = friend;
-        }
-      });
-      if ($rootScope.friendsByEmail) {
-        _.each(roster, function (contact) {
-          var email = contact.email, friend = email && $rootScope.friendsByEmail[email];
-          if (email && (!friend || friend.status !== FRIEND_STATUS.friend)) {
-            // if an entry for this email was added in the previous loop, we want
-            // this entry to overwrite it since the roster object has more data
-            completions[contact.email] = contact;
-          }
-        });
-      }
-      //completions = _.sortBy(completions, function (i) { return prettyUserFltr(i); }); // XXX sort by contact frequency instead
-      $rootScope.contactCompletions = completions;
-    }
-
     $rootScope.reload = function () {
       location.reload(true); // true to bypass cache and force request to server
     };
 
-    $rootScope.interaction = function (interactionid, extra) {
-      var stopTracking = interactionid === INTERACTION.reset && model.modal === MODAL.confirmReset;
-      return apiSrvc.interaction(interactionid, extra)
-        .success(function(data, status, headers, config) {
-          $log.debug('interaction(', interactionid, extra || '', ') successful');
-          if (stopTracking) {
-            gaMgr.stopTracking();
-          }
-        })
-        .error(function(data, status, headers, config) {
-          $log.error('interaction(', interactionid, extra, ') failed');
-          apiSrvc.exception({data: data, status: status, headers: headers, config: config});
-        });
-    };
-
-    $rootScope.changeSetting = function(key, val) {
-      var update = {path: '/settings/'+key, value: val};
-      return $rootScope.interaction(INTERACTION.set, update);
+    $rootScope.switchLang = function (lang) {
+        $rootScope.lang = lang;
+        $translate.use(lang);
     };
 
     $rootScope.changeLang = function(lang) {
@@ -195,11 +189,7 @@ var app = angular.module('app', [
     };
 
     $rootScope.openExternal = function(url) {
-      if ($rootScope.mockBackend) {
-        return $window.open(url);
-      } else {
-        return $rootScope.interaction(INTERACTION.url, {url: url});
-      }
+      return $window.open(url);
     };
 
     $rootScope.resetContactForm = function (scope) {
@@ -231,23 +221,20 @@ var app = angular.module('app', [
       });
     };
 
-    /**
-     * Checks whether the backend is gone (based on last successful connect time).
-     */
     $rootScope.backendIsGone = false;
-    $rootScope.$watch("cometdConnected", function(cometdConnected) {
+    $rootScope.$watch("wsConnected", function(wsConnected) {
       var MILLIS_UNTIL_BACKEND_CONSIDERED_GONE = 10000;
-      if (!cometdConnected) {
+      if (!wsConnected) {
         // In 11 seconds, check if we're still not connected
         $timeout(function() {
-          var lastConnectedAt = $rootScope.cometdLastConnectedAt;
+          var lastConnectedAt = $rootScope.wsLastConnectedAt;
           if (lastConnectedAt) {
             var timeSinceLastConnected = new Date().getTime() - lastConnectedAt.getTime();
             $log.debug("Time since last connect", timeSinceLastConnected);
             if (timeSinceLastConnected > MILLIS_UNTIL_BACKEND_CONSIDERED_GONE) {
               // If it's been more than 10 seconds since we last connect,
               // treat the backend as gone
-              $log.debug("Backend is gone");
+              console.log("Backend is gone");
               $rootScope.backendIsGone = true;
             } else {
               $rootScope.backendIsGone = false;

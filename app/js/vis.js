@@ -7,11 +7,11 @@ var PI = Math.PI,
     max = Math.max,
     round = Math.round;
 
-angular.module('app.vis', [])
+angular.module('app.vis', ['ngSanitize'])
   .directive('resizable', function ($window) {
     return function (scope, element) {
       function size() {
-        var w = element.width(), h = element.height();
+        var w = element[0].offsetWidth, h = element[0].offsetHeight;
         scope.projection.scale(max(w, h) / TWO_PI);
         scope.projection.translate([w >> 1, round(0.56*h)]);
         scope.$broadcast('mapResized', w, h);
@@ -28,36 +28,22 @@ angular.module('app.vis', [])
       element.attr('d', d);
     };
   })
-  .directive('self', function () {
-    return function (scope, element) {
-      scope.$on('mapResized', function () {
-        try {
-          scope.$digest();
-        } catch (e) {
-          if (e.message !== '$digest already in progress') {
-            throw e;
-          }
-        }
-      });
-    };
-  })
-  .directive('countries', function ($compile, $timeout) {
-
+  .directive('countries', function ($compile, $timeout, $window) {
     function ttTmpl(alpha2) {
-      return '<div class="vis">'+
-        '<div class="header">{{ "'+alpha2+'" | i18n }}</div>'+
-        '<div class="give-colored">{{ "NUSERS_ONLINE" | i18n:model.countries.'+alpha2+'.stats.gauges.userOnlineGiving || 0:true }} {{ "GIVING_ACCESS" | i18n }}</div>'+
-        '<div class="get-colored">{{ "NUSERS_ONLINE" | i18n:model.countries.'+alpha2+'.stats.gauges.userOnlineGetting || 0:true }} {{ "GETTING_ACCESS" | i18n }}</div>'+
+      return '<div class="vis" style="min-width:150px; cursor:pointer;">'+
+        '<div class="header">{{ "'+alpha2+'" | translate }}</div>'+
+        '<div class="give-colored">{{ (model.countries.'+ alpha2+'.stats.gauges.userOnlineGiving == 1 ? "NUSERS_ONLINE_1" : "NUSERS_ONLINE_OTHER") | translate: \'{ value: model.countries.'+alpha2+'.stats.gauges.userOnlineGiving || 0 }\' }} {{ "GIVING_ACCESS" | translate }}</div>'+
+        '<div class="get-colored">{{ (model.countries.'+alpha2+'.stats.gauges.userOnlineGetting == 1 ? "NUSERS_ONLINE_1" : "NUSERS_ONLINE_OTHER") | translate: \'{value: model.countries.'+alpha2+'.stats.gauges.userOnlineGetting || 0 }\' }} {{ "GETTING_ACCESS" | translate }}</div>'+
         '<div class="nusers {{ (!model.countries.'+alpha2+'.stats.gauges.userOnlineEver && !model.countries.'+alpha2+'.stats.counters.userOnlineEverOld) && \'gray\' || \'\' }}">'+
-          '{{ "NUSERS_EVER" | i18n:(model.countries.'+alpha2+'.stats.gauges.userOnlineEver + model.countries.'+alpha2+'.stats.gauges.userOnlineEverOld) }}'+
+          '{{ (model.countries.'+alpha2+'.stats.gauges.userOnlineEver + model.countries.'+alpha2+'.stats.gauges.userOnlineEverOld) == 1 ? "NUSERS_EVER_1" : "NUSERS_EVER_OTHER" | translate: \'{ value: (model.countries.'+alpha2+'.stats.gauges.userOnlineEver + model.countries.'+alpha2+'.stats.gauges.userOnlineEverOld) }\' }}'+
         '</div>'+
         '<div class="stats">'+
           '<div class="bps{{ model.countries.'+alpha2+'.bps || 0 }}">'+
-            '{{ model.countries.'+alpha2+'.bps || 0 | prettyBps }} {{ "TRANSFERRING_NOW" | i18n }}'+
+            '{{ model.countries.'+alpha2+'.bps || 0 | prettyBps }} {{ "TRANSFERRING_NOW" | translate }}'+
           '</div>'+
           '<div class="bytes{{ model.countries.'+alpha2+'.bytesEver || 0 }}">'+
-            '{{model.countries.'+alpha2+'.stats.counters.bytesGiven | prettyBytes}} {{"GIVEN" | i18n}}, ' +
-            '{{model.countries.'+alpha2+'.stats.counters.bytesGotten | prettyBytes}} {{"GOTTEN" | i18n}}' +
+            '{{model.countries.'+alpha2+'.stats.counters.bytesGiven | prettyBytes}} {{"GIVEN" | translate}}, ' +
+            '{{model.countries.'+alpha2+'.stats.counters.bytesGotten | prettyBytes}} {{"GOTTEN" | translate}}' +
           '</div>'+
         '</div>'+
       '</div>';
@@ -67,11 +53,6 @@ angular.module('app.vis', [])
       var maxNpeersOnline = 0,
           strokeOpacityScale = d3.scale.linear()
             .clamp(true).domain([0, 0]).range([0, 1]);
-
-      // Handle resize
-      scope.$on('mapResized', function () {
-        d3.selectAll('#countries path').attr('d', scope.path);
-      });
 
       // detect reset
       scope.$watch('model.setupComplete', function (newVal, oldVal) {
@@ -106,17 +87,22 @@ angular.module('app.vis', [])
         if (error) throw error;
         //XXX need to do something like this to use latest topojson:
         //var f = topojson.feature(world, world.objects.countries).features;
-        var f = topojson.object(world, world.objects.countries).geometries;
-        d3.select(element[0]).selectAll('path').data(f).enter().append("g").append('path')
+        var countries = topojson.object(world, world.objects.countries).geometries;
+        var country = d3.select(element[0]).selectAll('path').data(countries);
+        country.enter()
+          .append("g").append("path")
+          .attr("title", function(d,i) { return d.name; })
           .each(function (d) {
             var el = d3.select(this);
             el.attr('d', scope.path).attr('stroke-opacity', 0);
+            el.attr('class', 'COUNTRY_KNOWN');
             if (d.alpha2) {
-              el.attr('class', d.alpha2 + " COUNTRY_KNOWN")
-                .attr('tooltip-placement', 'mouse')
-                //.attr('tooltip-trigger', 'click') // uncomment out to make it easier to inspect tooltips when debugging
-                .attr('tooltip-html-unsafe', ttTmpl(d.alpha2));
-              $compile(this)(scope);
+              //var $content = ttTmpl(d.alpha2);
+
+              el.attr('class', d.alpha2 + " COUNTRY_KNOWN");
+                // .attr('tooltip-placement', 'mouse')
+                //.attr('tooltip-html-unsafe', $content);
+                // $compile(this)(scope);
             } else {
               el.attr('class', 'COUNTRY_UNKNOWN');
             }
@@ -193,19 +179,19 @@ angular.module('app.vis', [])
             <div class=header>{{peer.rosterEntry.name}}</div> \
             <div class=email>{{peer.rosterEntry.email}}</div> \
             <div class='peerid ip'>{{peer.peerid}}{{peer.formattedIp}}</div> \
-            <div class=type>{{peer.type && peer.mode && (((peer.type|upper)+(peer.mode|upper))|i18n) || ''}}</div> \
+            <div class=type>{{peer.type && peer.mode && (((peer.type|upper)+(peer.mode|upper))|translate) || ''}}</div> \
           </div> \
           <div class=stats> \
             <div class=bps{{peer.bpsUpDn}}> \
-              {{peer.bpsUp | prettyBps}} {{'UP' | i18n}}, \
-              {{peer.bpsDn | prettyBps}} {{'DN' | i18n}} \
+              {{peer.bpsUp | prettyBps}} {{'UP' | translate}}, \
+              {{peer.bpsDn | prettyBps}} {{'DN' | translate}} \
             </div> \
             <div class=bytes{{peer.bytesUpDn}}> \
-              {{peer.bytesUp | prettyBytes}} {{'SENT' | i18n}}, \
-              {{peer.bytesDn | prettyBytes}} {{'RECEIVED' | i18n}} \
+              {{peer.bytesUp | prettyBytes}} {{'SENT' | translate}}, \
+              {{peer.bytesDn | prettyBytes}} {{'RECEIVED' | translate}} \
             </div> \
             <div class=lastConnected> \
-              {{!peer.connected && peer.lastConnected && 'LAST_CONNECTED' || '' | i18n }} \
+              {{!peer.connected && peer.lastConnected && 'LAST_CONNECTED' || '' | translate }} \
               <time>{{!peer.connected && (peer.lastConnected | date:'short') || ''}}</time> \
             </div> \
           </div> \
@@ -292,7 +278,7 @@ angular.module('app.vis', [])
         var peerItems = newPeers.append("g")
           .attr("id", peerIdentifier)
           .classed("peer", true)
-          .attr("tooltip-placement", "mouse")
+          .attr("tooltip-placement", "bottom")
           .attr("tooltip-html-unsafe", peerTooltipTemplate)
           .each(function(peer) {
             // Compile the tooltip target dom element to enable the tooltip-html-unsafe directive
@@ -311,18 +297,21 @@ angular.module('app.vis', [])
         
         // Configure points and hover areas on each update
         allPeers.select("g.peer path.peer").attr("d", function(peer) {
-          return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]})
-        }).attr("class", function(peer) {
+            return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]})
+        })
+        .attr("filter", "url(#defaultBlur)")
+        .attr("class", function(peer) {
           var result = "peer " + peer.mode + " " + peer.type;
           if (peer.connected) {
             result += " connected";
           }
           return result;
         });
-        
+
         // Configure hover areas for all peers
-        allPeers.select("g.peer path.peer-hover-area").attr("d", function(peer) {
-          return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]}, 8)
+        allPeers.select("g.peer path.peer-hover-area")
+        .attr("d", function(peer) {
+          return scope.path({type: 'Point', coordinates: [peer.lon, peer.lat]}, 6);
         });
         
         // Add arcs for new peers
@@ -330,13 +319,13 @@ angular.module('app.vis', [])
           .classed("connection", true)
           .attr("id", function(peer) { return "connection_to_" + peerIdentifier(peer); });
         
-        // Set paths for arcs for all peers
-        allPeers.select("path.connection")
+          // Set paths for arcs for all peers
+          allPeers.select("path.connection")
           .attr("d", scope.pathConnection)
           .attr("stroke-opacity", function(peer) {
-            return connectionOpacityScale(peer.bpsUpDn || 0);
+              return connectionOpacityScale(peer.bpsUpDn || 0);
           });
-        
+
         // Animate connected/disconnected peers
         var newlyConnectedPeersSelector = "";
         var firstNewlyConnectedPeer = true;
@@ -398,6 +387,8 @@ angular.module('app.vis', [])
         
         // Remove departed peers
         departedPeers.remove();
+
+        scope.redraw(scope.zoom.translate(), scope.zoom.scale());
       }
       
       // Handle model changes
@@ -405,9 +396,12 @@ angular.module('app.vis', [])
       
       // Handle resize
       scope.$on("mapResized", function() {
+
+        d3.selectAll('#countries path').attr('d', scope.path);
+
         // Whenever the map resizes, we need to re-render the peers and arcs
         renderPeers(scope.model.peers, scope.model.peers);
-        
+
         // The above render call left the arcs alone because there were no
         // changes.  We now need to do some additional maintenance on the arcs.
         
@@ -420,23 +414,167 @@ angular.module('app.vis', [])
         peersContainer.selectAll("path.connection.active")
           .attr("stroke-dashoffset", 0)
           .attr("stroke-dasharray", getDashArray);
+
+        scope.redraw(scope.zoom.translate(), scope.zoom.scale());
       });
     };
   });
 
-function VisCtrl($scope, $window, $timeout, $filter, logFactory, modelSrvc, apiSrvc) {
-  var log = logFactory('VisCtrl'),
-      model = modelSrvc.model,
+app.controller('VisCtrl', ['$scope', '$rootScope', '$compile', '$window', '$timeout', '$filter',  'modelSrvc', 'apiSrvc', function($scope, $rootScope, $compile, $window, $timeout, $filter, modelSrvc, apiSrvc) {
+
+  var model = modelSrvc.model,
+      isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0,
+      width = document.getElementById('vis').offsetWidth,
+      height = document.getElementById('vis').offsetHeight,
       projection = d3.geo.mercator(),
       path = d3.geo.path().projection(projection),
       DEFAULT_POINT_RADIUS = 3;
 
   $scope.projection = projection;
 
+  $scope.once = false;
+
+  /* the self dot isn't dynamically appended to the SVG
+   * and we need a separate method to scale it when we zoom in/out
+   */
+  $scope.scaleSelf = function(factor) {
+      var self = document.getElementById("self");
+      var lat = self.getAttribute("lat");
+      var lon = self.getAttribute("lon");
+      if (self.getAttribute('d') != null &&
+          lat != '' && lon != '') {
+        var d = {type: 'Point', coordinates: [lon, 
+                lat]};
+        self.setAttribute('d', path(d));
+      }
+  };
+
+  function scaleMapElements(scale) {
+      var scaleFactor = (scale > 2) ? (5/scale) : DEFAULT_POINT_RADIUS;
+      // stroke width is based off minimum threshold or scaled amount
+      // according to user zoom-level
+      var strokeWidth = Math.min(0.5, 1/scale);
+      path.pointRadius(scaleFactor);
+      $scope.scaleSelf(scaleFactor);
+      d3.selectAll("#countries path").attr("stroke-width", 
+        strokeWidth);
+      d3.selectAll("path.connection").attr("stroke-width",
+        strokeWidth);
+      d3.select("#zoomCenter").classed('zoomedIn', scale != 1);
+
+       /* scale peer radius as we zoom in */
+      d3.selectAll("g.peer path.peer").attr("d", function(peer) {
+          var d = {type: 'Point', coordinates: [peer.lon, peer.lat]};
+          return path(d);
+      });
+
+      /* adjust gaussian blur by zoom level */
+      if (scale > 2) {
+          $scope.filterBlur.attr("stdDeviation", Math.min(1.0, 1/scale));
+      } else {
+          $scope.filterBlur.attr("stdDeviation", 0.8);
+      }
+      
+  }
+  
+  // Constrain translate to prevent panning off map
+  function constrainTranslate(translate, scale) {
+    var vz = document.getElementById('vis'); 
+    var w = vz.offsetWidth;
+    var h = vz.offsetHeight;
+    var topLeft = [0, 0];
+    var bottomRight = [w * (scale - 1), h * (scale - 1)];  
+    bottomRight[0] = -1 * bottomRight[0];
+    bottomRight[1] = -1 * bottomRight[1];
+    return [ Math.max(Math.min(translate[0], topLeft[0]), bottomRight[0]),
+             Math.max(Math.min(translate[1], topLeft[1]), bottomRight[1]) ];
+  }
+
+  $scope.redraw = function(translate, scale) {
+
+      translate = !translate ? d3.event.translate : translate;
+      scale = !scale ? d3.event.scale : scale;
+
+      translate = constrainTranslate(translate, scale);
+      
+      // Update the translate on the D3 zoom behavior to our constrained
+      // value to keep them in sync.
+      $scope.zoom.translate(translate);
+      
+      /* reset translation matrix */
+      $scope.transMatrix = [scale, 0, 0, scale, 
+        translate[0], translate[1]];
+
+      d3.select("#zoomGroup").attr("transform", 
+        "translate(" + translate.join(",") + ")scale(" + scale + ")");
+    
+      scaleMapElements(scale);
+
+  };
+
+  $scope.zoom = d3.behavior.zoom().scaleExtent([1,10]).on("zoom", 
+                $scope.redraw);
+
+   /* apply zoom behavior to container if we're running in webview since
+    * it doesn't detect panning/zooming otherwise */
+   d3.select(isSafari ? '#vis' : 'svg').call($scope.zoom);
+   $scope.svg = d3.select('svg');
+   $scope.filterBlur = $scope.svg.append("filter").attr("id", "defaultBlur").append("feGaussianBlur").attr("stdDeviation", "1");
+  
+  /* translation matrix on container zoom group element 
+  *  used for combining scaling and translation transformations
+  *  and for programmatically setting scale and zoom settings
+  * */
+  $scope.transMatrix = [1,0,0,1,0,0];
+
+  $scope.centerZoom = function() {
+    d3.select("#zoomGroup").attr("transform", "translate(0,0),scale(1)");
+    $scope.zoom.translate([0,0]);
+    $scope.zoom.scale([1]);
+    $scope.redraw([0,0], 1);
+  };
+
+  $scope.adjustZoom = function(scale) {
+      /* limit zoom range */
+      if ((scale == 0.8 && $scope.zoom.scale() <= 1) ||
+          (scale == 1.25 && $scope.zoom.scale() > 9)) {
+        return;
+      }
+
+      var map = document.getElementById("map");
+      var rect = map.getBoundingClientRect();
+      var width = rect.width;
+      var height = rect.height;
+
+      /* multiply values in our translation matrix
+       * by the scaling factor
+       */
+      for (var i=0; i< $scope.transMatrix.length; i++)
+      {
+          $scope.transMatrix[i] *= scale;
+      }
+
+      /* this preserves the position of the center
+       * even after we've applied the scale factor */
+      var translate = [$scope.transMatrix[4] + (1-scale)*width/2,
+                       $scope.transMatrix[5] + (1-scale)*height/2];
+      translate = constrainTranslate(translate, $scope.transMatrix[0]);
+      $scope.transMatrix[4] = translate[0];
+      $scope.transMatrix[5] = translate[1];
+      
+      var newMatrix = "matrix(" +  $scope.transMatrix.join(' ') + ")";
+      d3.select("#zoomGroup").attr("transform", newMatrix);
+
+      scaleMapElements($scope.transMatrix[0]);
+
+      /* programmatically update our zoom translation vector and scale */
+      $scope.zoom.translate([$scope.transMatrix[4], $scope.transMatrix[5]]);
+      $scope.zoom.scale($scope.transMatrix[0]);
+  };
+
   $scope.path = function (d, pointRadius) {
-    path.pointRadius(pointRadius || DEFAULT_POINT_RADIUS);
-    // https://code.google.com/p/chromium/issues/detail?id=231626
-    return path(d) || 'M0 0';
+      path.pointRadius(pointRadius || DEFAULT_POINT_RADIUS);
+      return path(d) || 'M0 0';
   };
 
   $scope.pathConnection = function (peer) {
@@ -477,4 +615,4 @@ function VisCtrl($scope, $window, $timeout, $filter, logFactory, modelSrvc, apiS
           'M'+xS+','+yS+' Q '+xC+','+yC+' '+xP+','+yP;
     }
   };
-}
+}]);
