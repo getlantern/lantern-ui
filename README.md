@@ -1,4 +1,6 @@
-# lantern-ui
+# **UNMAINTAINED** lantern-ui
+
+### This project is no longer maintained nor is it used anywhere in lantern products anymore
 
 [![Build
 Status](https://secure.travis-ci.org/getlantern/lantern-ui.png)](http://travis-ci.org/getlantern/lantern-ui "Build Status")
